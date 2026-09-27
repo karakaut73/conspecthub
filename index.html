@@ -1,0 +1,3833 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<!-- ============================================================
+     КОНСПЕКТХАБ — школьный менеджер конспектов
+     Создатель: Орлов Иван, 10а
+     ============================================================ -->
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=5">
+<meta name="theme-color" content="#1a1410">
+<meta name="description" content="КонспектХаб — делись конспектами с одноклассниками">
+<title>КонспектХаб</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🍁</text></svg>">
+
+<style>
+/* ============================================================
+   1. ПЕРЕМЕННЫЕ И БАЗОВЫЕ СТИЛИ
+   ============================================================ */
+:root {
+  /* Осенняя палитра */
+  --bg: #17120d;
+  --bg-2: #1f1811;
+  --card: #231c14;
+  --card-2: #2d2419;
+  --border: #3a2f22;
+  --border-2: #4a3c2b;
+
+  --text: #f2e8d8;
+  --text-muted: #a89681;
+
+  --accent: #e08a3c;
+  --accent-hover: #d17a2c;
+  --accent-soft: rgba(224, 138, 60, 0.13);
+  --accent-soft-2: rgba(224, 138, 60, 0.24);
+
+  --gold: #c9a04e;
+  --danger: #e5564a;
+  --warn: #e8b04b;
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  /* Убираем серую подсветку при тапе на телефоне */
+  -webkit-tap-highlight-color: transparent;
+}
+
+html, body {
+  overflow-x: hidden;
+}
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  background:
+    radial-gradient(1000px 500px at 15% -10%, rgba(224,138,60,.07), transparent 60%),
+    var(--bg);
+  color: var(--text);
+  font-size: 15px;
+  line-height: 1.5;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+main { flex: 1; }
+
+/* Формы и кнопки наследуют шрифт */
+button, input, textarea {
+  font-family: inherit;
+  font-size: inherit;
+  color: inherit;
+}
+button {
+  cursor: pointer;
+  /* Убираем задержку тапа 300мс на мобильных */
+  touch-action: manipulation;
+  -webkit-appearance: none;
+  appearance: none;
+}
+
+/* ============================================================
+   2. ШАПКА САЙТА
+   ============================================================ */
+.header {
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  background: rgba(35, 28, 20, 0.97);
+  -webkit-backdrop-filter: blur(10px);
+  backdrop-filter: blur(10px);
+  border-bottom: 1px solid var(--border);
+}
+
+.header__inner {
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 12px 16px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.logo {
+  font-size: 17px;
+  font-weight: 700;
+  white-space: nowrap;
+}
+.logo::before {
+  content: '🍂';
+  margin-right: 5px;
+}
+.logo em {
+  font-style: normal;
+  color: var(--accent);
+}
+
+.header__spacer { flex: 1; }
+
+/* Кнопки в шапке (звонок, настройки) */
+.icon-btn {
+  position: relative;
+  width: 42px;
+  height: 42px;
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  font-size: 15px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.badge {
+  position: absolute;
+  top: -6px;
+  right: -6px;
+  background: var(--danger);
+  color: #fff;
+  font-size: 10px;
+  font-weight: 800;
+  min-width: 18px;
+  height: 18px;
+  padding: 0 5px;
+  border-radius: 999px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 2px solid var(--bg);
+}
+
+/* Чип с именем пользователя */
+.user-chip {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: var(--card);
+  border: 1px solid var(--border);
+  padding: 6px 12px 6px 6px;
+  border-radius: 999px;
+  font-size: 13px;
+  min-height: 42px;
+}
+
+.avatar {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--accent), var(--gold));
+  color: #1a1410;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 800;
+  font-size: 12px;
+  flex-shrink: 0;
+}
+
+/* ============================================================
+   3. ХЛЕБНЫЕ КРОШКИ (навигация)
+   ============================================================ */
+.crumbs {
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 14px 16px 0;
+  display: flex;
+  gap: 4px;
+  align-items: center;
+  font-size: 13px;
+  color: var(--text-muted);
+  flex-wrap: wrap;
+}
+
+.crumbs button {
+  background: none;
+  border: none;
+  color: var(--text-muted);
+  font-size: 13px;
+  padding: 6px 8px;
+  border-radius: 6px;
+  min-height: 34px;
+}
+
+.crumbs .sep { opacity: 0.4; }
+.crumbs .current { color: var(--text); font-weight: 600; padding: 6px 8px; }
+.crumbs .spacer { flex: 1; min-width: 4px; }
+
+.chat-link {
+  background: var(--accent-soft) !important;
+  color: var(--accent) !important;
+  font-weight: 600 !important;
+  padding: 6px 12px !important;
+  border-radius: 8px !important;
+  font-size: 12px !important;
+  min-height: 34px !important;
+}
+
+/* ============================================================
+   4. ОСНОВНОЙ КОНТЕНТ
+   ============================================================ */
+#view {
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 14px 16px 60px;
+  width: 100%;
+}
+
+.title {
+  font-size: 21px;
+  font-weight: 700;
+  margin-bottom: 18px;
+}
+.title::before {
+  content: '🍁';
+  margin-right: 6px;
+}
+
+/* ---------- Сетка классов ---------- */
+.grades {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.grade-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 14px 16px;
+}
+
+.grade-row__label {
+  font-weight: 700;
+  font-size: 14px;
+  min-width: 80px;
+  color: var(--accent);
+  padding-top: 10px;
+}
+
+.grade-row__classes {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  flex: 1;
+}
+
+/* Кнопка класса с счётчиками */
+.class-btn {
+  position: relative;
+  background: var(--card-2);
+  border: 1px solid var(--border);
+  font-size: 15px;
+  font-weight: 700;
+  padding: 12px 16px;
+  border-radius: 10px;
+  min-width: 62px;
+  min-height: 44px;
+}
+
+.class-btn__count {
+  position: absolute;
+  top: -7px;
+  right: -7px;
+  background: linear-gradient(135deg, var(--accent), var(--gold));
+  color: #1a1410;
+  font-size: 10px;
+  font-weight: 800;
+  min-width: 18px;
+  height: 18px;
+  padding: 0 5px;
+  border-radius: 999px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 2px solid var(--bg);
+}
+
+/* Красная точка "есть непрочитанное" */
+.unread-dot {
+  position: absolute;
+  top: -7px;
+  left: -7px;
+  background: var(--danger);
+  color: #fff;
+  font-size: 10px;
+  font-weight: 800;
+  min-width: 18px;
+  height: 18px;
+  padding: 0 5px;
+  border-radius: 999px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 2px solid var(--bg);
+}
+
+/* ---------- Чаты параллелей ---------- */
+.chats-section {
+  margin-top: 30px;
+}
+.chats-section h2 {
+  font-size: 17px;
+  font-weight: 700;
+  margin-bottom: 12px;
+}
+.chats-section h2::before {
+  content: '🍄 ';
+}
+
+.chat-cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 12px;
+}
+
+.chat-card {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 14px 16px;
+  text-align: left;
+  min-height: 58px;
+}
+
+.chat-card__icon { font-size: 24px; }
+.chat-card__name { font-weight: 600; font-size: 14px; }
+.chat-card__preview {
+  font-size: 12px;
+  color: var(--text-muted);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  max-width: 180px;
+}
+
+.chat-card__unread {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  background: var(--danger);
+  color: #fff;
+  font-size: 10px;
+  font-weight: 800;
+  min-width: 20px;
+  height: 20px;
+  padding: 0 6px;
+  border-radius: 999px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* ---------- Сетка предметов ---------- */
+.subjects {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 12px;
+}
+
+.subject-card {
+  position: relative;
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 16px;
+  text-align: left;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-height: 80px;
+}
+
+.subject-card__head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.subject-card__icon { font-size: 22px; }
+.subject-card__name { font-weight: 600; font-size: 14px; }
+.subject-card__count { font-size: 12px; color: var(--text-muted); }
+
+.subject-card__last {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 11px;
+  color: var(--accent);
+  background: var(--accent-soft);
+  padding: 4px 8px;
+  border-radius: 6px;
+  margin-top: 4px;
+  width: fit-content;
+}
+.subject-card__empty {
+  font-size: 11px;
+  color: var(--text-muted);
+  opacity: 0.7;
+  margin-top: 4px;
+}
+
+/* ---------- Экран предмета ---------- */
+.posts-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 16px;
+  flex-wrap: wrap;
+}
+
+.posts-layout {
+  display: grid;
+  grid-template-columns: 290px 1fr;
+  gap: 20px;
+  align-items: start;
+}
+.posts-layout--no-calendar { grid-template-columns: 1fr; }
+
+/* ---------- Кнопки ---------- */
+.btn {
+  padding: 12px 18px;
+  border: none;
+  border-radius: 10px;
+  font-size: 14px;
+  font-weight: 600;
+  min-height: 44px;
+}
+.btn--primary {
+  background: linear-gradient(135deg, var(--accent), var(--gold));
+  color: #1a1410;
+  font-weight: 700;
+}
+.btn--ghost {
+  background: transparent;
+  color: var(--text-muted);
+  border: 1px solid var(--border);
+}
+
+/* ---------- Календарь ---------- */
+.calendar {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 14px;
+  position: sticky;
+  top: 76px;
+}
+.calendar__head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+}
+.calendar__nav {
+  background: none;
+  border: 1px solid var(--border);
+  color: var(--text-muted);
+  width: 36px;
+  height: 36px;
+  border-radius: 8px;
+  font-size: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.calendar__title {
+  font-size: 14px;
+  font-weight: 700;
+  text-transform: capitalize;
+}
+.calendar__weekdays {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 3px;
+  margin-bottom: 4px;
+}
+.calendar__wd {
+  text-align: center;
+  font-size: 10px;
+  color: var(--text-muted);
+  font-weight: 700;
+  text-transform: uppercase;
+  padding: 2px 0;
+}
+.calendar__grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 3px;
+}
+.calendar__cell {
+  position: relative;
+  aspect-ratio: 1/1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  border-radius: 7px;
+  background: transparent;
+  border: 1px solid transparent;
+  min-height: 34px;
+  user-select: none;
+  -webkit-user-select: none;
+}
+.calendar__cell--empty { visibility: hidden; pointer-events: none; }
+.calendar__cell--today { color: var(--accent); font-weight: 700; }
+.calendar__cell--has-posts {
+  background: var(--accent-soft);
+  color: var(--accent);
+  font-weight: 700;
+}
+.calendar__cell--selected {
+  background: linear-gradient(135deg, var(--accent), var(--gold)) !important;
+  color: #1a1410 !important;
+  font-weight: 800;
+}
+.calendar__dot {
+  position: absolute;
+  bottom: 3px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background: currentColor;
+}
+.calendar__cell--selected .calendar__dot { background: #1a1410; }
+
+.calendar__filter-bar {
+  margin-top: 12px;
+  padding-top: 12px;
+  border-top: 1px solid var(--border);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+  color: var(--text-muted);
+}
+.calendar__clear {
+  background: none;
+  border: 1px solid var(--border);
+  color: var(--accent);
+  padding: 8px 12px;
+  border-radius: 7px;
+  font-size: 12px;
+  font-weight: 700;
+  min-height: 36px;
+}
+
+/* ---------- Форма загрузки конспекта ---------- */
+.upload-form {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 16px;
+  margin-bottom: 18px;
+}
+
+/* Общий вид поля формы */
+.field { margin-bottom: 12px; }
+.field label {
+  display: block;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text-muted);
+  margin-bottom: 5px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+.field input,
+.field textarea {
+  width: 100%;
+  padding: 12px;
+  background: var(--bg-2);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  color: var(--text);
+  /* 16px — важно для iOS, чтобы не зумило страницу при фокусе */
+  font-size: 16px;
+  outline: none;
+  min-height: 46px;
+}
+.field input[type="date"],
+.field input[type="time"] {
+  color-scheme: dark;
+}
+
+.field-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+
+.hint {
+  font-size: 11px;
+  color: var(--text-muted);
+  margin-top: 5px;
+  opacity: 0.8;
+}
+
+/* Быстрые кнопки выбора даты */
+.quick-dates {
+  display: flex;
+  gap: 5px;
+  margin-top: 6px;
+  flex-wrap: wrap;
+}
+.quick-dates button {
+  background: var(--bg-2);
+  border: 1px solid var(--border);
+  color: var(--text-muted);
+  padding: 8px 12px;
+  border-radius: 7px;
+  font-size: 12px;
+  font-weight: 600;
+  min-height: 36px;
+}
+
+/* Поле загрузки фото */
+.file-label {
+  display: flex !important;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  background: var(--bg-2);
+  border: 2px dashed var(--border);
+  border-radius: 12px;
+  padding: 18px;
+  font-size: 14px !important;
+  color: var(--text-muted) !important;
+  font-weight: 500 !important;
+  min-height: 76px;
+  text-align: center;
+  text-transform: none;
+  letter-spacing: 0;
+}
+.file-label--has-file {
+  border-style: solid;
+  border-color: var(--accent);
+  color: var(--accent) !important;
+}
+
+.preview-img {
+  width: 100%;
+  max-height: 320px;
+  object-fit: contain;
+  border-radius: 12px;
+  margin-top: 8px;
+  background: #0d0a06;
+}
+
+.form-actions {
+  display: flex;
+  gap: 8px;
+  justify-content: flex-end;
+  margin-top: 14px;
+  flex-wrap: wrap;
+}
+
+/* ---------- Карточки конспектов ---------- */
+.posts {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(210px, 1fr));
+  gap: 14px;
+}
+
+.post {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  position: relative;
+}
+
+.post--new {
+  border-color: var(--danger);
+  box-shadow: 0 0 0 1px var(--danger);
+}
+
+/* Плашка "запланирован" */
+.post__badge {
+  position: absolute;
+  top: 8px;
+  left: 8px;
+  background: linear-gradient(135deg, var(--warn), var(--accent));
+  color: #1a1410;
+  font-size: 10px;
+  font-weight: 800;
+  padding: 4px 8px;
+  border-radius: 6px;
+  text-transform: uppercase;
+  z-index: 2;
+}
+
+/* Плашка "NEW" */
+.post__badge--new {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  background: var(--danger);
+  color: #fff;
+  font-size: 10px;
+  font-weight: 800;
+  padding: 4px 8px;
+  border-radius: 6px;
+  text-transform: uppercase;
+  z-index: 2;
+}
+
+.post__image {
+  width: 100%;
+  aspect-ratio: 4/3;
+  object-fit: cover;
+  display: block;
+  background: #0d0a06;
+  cursor: zoom-in;
+}
+
+.post__body {
+  padding: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  flex: 1;
+}
+
+.post__title {
+  font-weight: 600;
+  font-size: 14px;
+  word-break: break-word;
+  line-height: 1.3;
+  cursor: pointer;
+}
+
+.post__desc {
+  font-size: 12px;
+  color: var(--text-muted);
+  word-break: break-word;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.post__footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 12px;
+  color: var(--text-muted);
+  margin-top: auto;
+  padding-top: 8px;
+  border-top: 1px solid var(--border);
+  gap: 6px;
+}
+
+.post__author {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  min-width: 0;
+}
+.post__author .avatar {
+  width: 20px;
+  height: 20px;
+  font-size: 10px;
+}
+.post__author span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.post__actions {
+  display: flex;
+  gap: 2px;
+  align-items: center;
+}
+
+.icon-action {
+  background: none;
+  border: none;
+  color: var(--text-muted);
+  padding: 6px;
+  border-radius: 6px;
+  font-size: 12px;
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  min-height: 34px;
+  min-width: 34px;
+  justify-content: center;
+}
+.icon-action--comment { color: var(--accent); }
+
+.post__date {
+  font-size: 10px;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  line-height: 1.2;
+}
+.post__date .date { color: var(--text); }
+.post__date .time { color: var(--text-muted); }
+.post__edited {
+  font-style: italic;
+  font-size: 9px;
+  color: var(--text-muted);
+  opacity: 0.7;
+}
+
+/* ---------- Чат ---------- */
+.chat-view {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.chat-messages {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 14px;
+  min-height: 340px;
+  max-height: 55vh;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  -webkit-overflow-scrolling: touch;
+}
+
+.chat-empty {
+  margin: auto;
+  color: var(--text-muted);
+  text-align: center;
+  font-size: 14px;
+  padding: 18px;
+}
+
+.chat-msg {
+  display: flex;
+  gap: 10px;
+  align-items: flex-start;
+}
+.chat-msg__body { flex: 1; min-width: 0; }
+.chat-msg__head {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+  margin-bottom: 3px;
+  font-size: 12px;
+  flex-wrap: wrap;
+}
+.chat-msg__author { font-weight: 700; }
+.chat-msg__time { color: var(--text-muted); font-size: 11px; }
+.chat-msg__text {
+  background: var(--bg-2);
+  padding: 9px 12px;
+  border-radius: 10px;
+  font-size: 14px;
+  line-height: 1.4;
+  word-break: break-word;
+  white-space: pre-wrap;
+  display: inline-block;
+  max-width: 100%;
+}
+.chat-msg--own .chat-msg__text {
+  background: var(--accent-soft);
+  border: 1px solid rgba(224, 138, 60, 0.2);
+}
+.chat-msg__del {
+  background: none;
+  border: none;
+  color: var(--text-muted);
+  font-size: 12px;
+  padding: 4px 6px;
+  border-radius: 5px;
+  margin-left: auto;
+  min-width: 28px;
+}
+
+.chat-input-row {
+  display: flex;
+  gap: 10px;
+}
+.chat-input-row input {
+  flex: 1;
+  padding: 12px;
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  color: var(--text);
+  font-size: 16px;
+  outline: none;
+  min-height: 46px;
+}
+
+/* ---------- Пустые состояния ---------- */
+.empty {
+  text-align: center;
+  padding: 40px 20px;
+  color: var(--text-muted);
+  grid-column: 1 / -1;
+  background: var(--card);
+  border: 1px dashed var(--border);
+  border-radius: 14px;
+}
+.empty__icon {
+  font-size: 42px;
+  margin-bottom: 8px;
+  opacity: 0.6;
+}
+
+/* ============================================================
+   5. МОДАЛЬНЫЕ ОКНА
+   ============================================================ */
+.overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(10, 7, 4, 0.9);
+  display: none;
+  /* align-items: flex-start + margin: auto у модалки — модалка
+     не обрезается сверху, если выше экрана (важно для мобильных) */
+  align-items: flex-start;
+  justify-content: center;
+  padding: 16px;
+  z-index: 10000;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+}
+.overlay--open { display: flex; }
+
+.modal {
+  margin: auto;
+  background: linear-gradient(180deg, var(--card), #1d1710);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  width: 100%;
+  max-width: 420px;
+  padding: 24px;
+  max-height: 92vh;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+.modal h2 {
+  font-size: 18px;
+  margin-bottom: 8px;
+}
+.modal p {
+  color: var(--text-muted);
+  font-size: 13px;
+  margin-bottom: 18px;
+}
+
+.modal__head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+  gap: 10px;
+}
+.modal__head h2 { font-size: 18px; margin: 0; }
+
+.modal__close {
+  background: none;
+  border: none;
+  color: var(--text-muted);
+  font-size: 24px;
+  width: 44px;
+  height: 44px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.modal--wide { max-width: 520px; }
+.modal--image {
+  max-width: 900px;
+  padding: 0;
+  background: transparent;
+  border: none;
+}
+.modal--image img {
+  width: 100%;
+  max-height: 85vh;
+  object-fit: contain;
+  border-radius: 12px;
+}
+
+.modal--detail {
+  max-width: 640px;
+  padding: 0;
+  position: relative;
+  max-height: 90vh;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+.detail-scroll {
+  overflow-y: auto;
+  padding: 20px;
+  -webkit-overflow-scrolling: touch;
+}
+.detail-close {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  background: rgba(0, 0, 0, 0.6);
+  border: none;
+  color: #fff;
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  font-size: 22px;
+  z-index: 5;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* ---------- Просмотр конспекта ---------- */
+.detail-image {
+  width: 100%;
+  border-radius: 12px;
+  margin-bottom: 16px;
+  background: #0d0a06;
+  cursor: zoom-in;
+}
+.detail-title {
+  font-size: 19px;
+  font-weight: 700;
+  margin-bottom: 6px;
+  word-break: break-word;
+}
+.detail-desc {
+  color: var(--text-muted);
+  margin-bottom: 12px;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+.detail-meta {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  padding: 10px 0;
+  border-top: 1px solid var(--border);
+  border-bottom: 1px solid var(--border);
+  font-size: 12px;
+  color: var(--text-muted);
+  margin-bottom: 16px;
+  flex-wrap: wrap;
+}
+
+/* ---------- Комментарии ---------- */
+.comments-title {
+  font-size: 12px;
+  font-weight: 700;
+  margin-bottom: 12px;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+.comments-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+.comments-empty {
+  color: var(--text-muted);
+  font-size: 13px;
+  text-align: center;
+  padding: 14px 0;
+}
+.comment {
+  display: flex;
+  gap: 8px;
+}
+.comment__body { flex: 1; min-width: 0; }
+.comment__head {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+  margin-bottom: 3px;
+  font-size: 12px;
+  flex-wrap: wrap;
+}
+.comment__author { font-weight: 700; }
+.comment__time { color: var(--text-muted); font-size: 11px; }
+.comment__text {
+  font-size: 13px;
+  word-break: break-word;
+  white-space: pre-wrap;
+  line-height: 1.4;
+}
+.comment__del {
+  background: none;
+  border: none;
+  color: var(--text-muted);
+  font-size: 12px;
+  padding: 4px 6px;
+  border-radius: 5px;
+  margin-left: auto;
+  min-width: 28px;
+}
+.comment-form {
+  display: flex;
+  gap: 8px;
+}
+.comment-form input {
+  flex: 1;
+  padding: 12px;
+  background: var(--bg-2);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  color: var(--text);
+  font-size: 16px;
+  outline: none;
+  min-height: 46px;
+}
+
+/* ---------- Уведомления ---------- */
+.notif-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  max-height: 55vh;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+}
+.notif-item {
+  display: flex;
+  gap: 10px;
+  padding: 12px;
+  background: var(--bg-2);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  align-items: flex-start;
+}
+.notif-item__icon {
+  width: 34px;
+  height: 34px;
+  border-radius: 9px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 17px;
+  flex-shrink: 0;
+  background: var(--accent-soft);
+}
+.notif-item__body { flex: 1; min-width: 0; }
+.notif-item__title {
+  font-size: 13px;
+  margin-bottom: 3px;
+  word-break: break-word;
+}
+.notif-item__title strong { color: var(--accent); }
+.notif-item__text {
+  font-size: 13px;
+  color: var(--text-muted);
+  word-break: break-word;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+.notif-item__time {
+  font-size: 11px;
+  color: var(--text-muted);
+  opacity: 0.7;
+  margin-top: 3px;
+}
+.notif-empty {
+  text-align: center;
+  padding: 36px 20px;
+  color: var(--text-muted);
+}
+.notif-empty__icon {
+  font-size: 48px;
+  opacity: 0.5;
+  margin-bottom: 10px;
+}
+
+/* ---------- Настройки ---------- */
+.settings {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.settings-group {
+  padding: 14px;
+  background: var(--bg-2);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+}
+.setting-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  min-height: 44px;
+  cursor: pointer;
+  user-select: none;
+  -webkit-user-select: none;
+}
+.setting-row__info { flex: 1; min-width: 0; }
+.setting-row__title {
+  font-size: 14px;
+  font-weight: 600;
+  margin-bottom: 2px;
+}
+.setting-row__desc {
+  font-size: 12px;
+  color: var(--text-muted);
+}
+
+/* Переключатель */
+.switch {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 46px;
+  height: 26px;
+  background: var(--border-2);
+  border-radius: 999px;
+  position: relative;
+  flex-shrink: 0;
+  outline: none;
+  border: none;
+}
+.switch::after {
+  content: '';
+  position: absolute;
+  top: 3px;
+  left: 3px;
+  width: 20px;
+  height: 20px;
+  background: #fff;
+  border-radius: 50%;
+  transition: transform 0.2s;
+}
+.switch:checked {
+  background: linear-gradient(135deg, var(--accent), var(--gold));
+}
+.switch:checked::after {
+  transform: translateX(20px);
+}
+
+.settings-sub {
+  margin-top: 12px;
+  padding-top: 12px;
+  border-top: 1px solid var(--border);
+}
+.settings-sub__label {
+  font-size: 11px;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  font-weight: 700;
+  margin-bottom: 8px;
+}
+.grade-chips {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+.grade-chip {
+  padding: 10px 14px;
+  border-radius: 8px;
+  background: var(--card);
+  border: 1px solid var(--border);
+  color: var(--text-muted);
+  font-size: 13px;
+  font-weight: 600;
+  min-height: 40px;
+  min-width: 48px;
+}
+.grade-chip--on {
+  background: var(--accent-soft);
+  border-color: var(--accent);
+  color: var(--accent);
+}
+.grade-chip--off {
+  opacity: 0.45;
+  text-decoration: line-through;
+}
+
+/* ---------- Аутентификация ---------- */
+.auth-tabs {
+  display: flex;
+  gap: 6px;
+  background: var(--bg-2);
+  padding: 4px;
+  border-radius: 12px;
+  margin-bottom: 18px;
+}
+.auth-tab {
+  flex: 1;
+  padding: 12px;
+  background: none;
+  border: none;
+  color: var(--text-muted);
+  font-size: 13px;
+  font-weight: 600;
+  border-radius: 9px;
+  min-height: 44px;
+}
+.auth-tab--active {
+  background: linear-gradient(135deg, var(--accent), var(--gold));
+  color: #1a1410;
+  font-weight: 700;
+}
+
+.auth-form {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.auth-field label {
+  display: block;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text-muted);
+  margin-bottom: 5px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+.auth-field input {
+  width: 100%;
+  padding: 12px;
+  background: var(--bg-2);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  color: var(--text);
+  font-size: 16px;
+  outline: none;
+  min-height: 48px;
+}
+
+.auth-error {
+  color: var(--danger);
+  font-size: 12px;
+  padding: 10px;
+  background: rgba(229, 86, 74, 0.08);
+  border: 1px solid rgba(229, 86, 74, 0.25);
+  border-radius: 8px;
+  display: none;
+  word-break: break-word;
+}
+.auth-error--show { display: block; }
+
+/* ---------- Меню пользователя ---------- */
+.user-menu {
+  position: fixed;
+  top: 60px;
+  right: 12px;
+  background: linear-gradient(180deg, var(--card), #1d1710);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 6px;
+  min-width: 190px;
+  z-index: 300;
+  display: none;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.55);
+}
+.user-menu--open { display: block; }
+
+.user-menu__head {
+  padding: 10px;
+  border-bottom: 1px solid var(--border);
+  margin-bottom: 6px;
+}
+.user-menu__name { font-size: 14px; font-weight: 700; }
+.user-menu__sub { font-size: 11px; color: var(--text-muted); margin-top: 2px; }
+
+.user-menu__item {
+  width: 100%;
+  padding: 12px;
+  background: none;
+  border: none;
+  color: var(--text);
+  font-size: 14px;
+  text-align: left;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 44px;
+}
+
+/* ---------- Тост (всплывающее сообщение) ---------- */
+.toast {
+  position: fixed;
+  bottom: 20px;
+  left: 50%;
+  transform: translateX(-50%) translateY(120px);
+  background: var(--card);
+  border: 1px solid var(--border);
+  color: var(--text);
+  padding: 12px 20px;
+  border-radius: 12px;
+  font-size: 14px;
+  z-index: 2000;
+  transition: transform 0.3s;
+  max-width: 90vw;
+  text-align: center;
+  pointer-events: none;
+}
+.toast--show { transform: translateX(-50%) translateY(0); }
+
+/* ---------- Пуш-уведомление (правый верхний угол) ---------- */
+.push {
+  position: fixed;
+  top: 70px;
+  right: 16px;
+  background: linear-gradient(180deg, var(--card), #1d1710);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 12px;
+  display: flex;
+  gap: 10px;
+  min-width: 260px;
+  max-width: 340px;
+  transform: translateX(420px);
+  transition: transform 0.3s;
+  z-index: 3000;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.55);
+  cursor: pointer;
+  align-items: flex-start;
+}
+.push--show { transform: translateX(0); }
+.push__icon {
+  width: 32px;
+  height: 32px;
+  border-radius: 9px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 17px;
+  flex-shrink: 0;
+  background: var(--accent-soft);
+}
+.push__body { min-width: 0; flex: 1; }
+.push__title {
+  font-size: 13px;
+  font-weight: 700;
+  margin-bottom: 3px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.push__text {
+  font-size: 12px;
+  color: var(--text-muted);
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  line-height: 1.35;
+}
+
+/* ---------- Футер ---------- */
+.footer {
+  border-top: 1px solid var(--border);
+  background: linear-gradient(180deg, transparent, rgba(35, 28, 20, 0.5));
+}
+.footer__inner {
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 20px 16px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+  font-size: 12px;
+  color: var(--text-muted);
+}
+.footer__credit {
+  color: var(--text);
+  font-weight: 600;
+}
+.footer__credit em {
+  font-style: normal;
+  color: var(--accent);
+  font-weight: 700;
+}
+
+/* ---------- Экран ошибки (появляется, если упал JS) ---------- */
+.error-screen {
+  position: fixed;
+  inset: 0;
+  background: #17120d;
+  color: #f2e8d8;
+  padding: 20px;
+  font-family: monospace;
+  font-size: 13px;
+  z-index: 999999;
+  overflow: auto;
+}
+.error-screen h2 {
+  font-size: 18px;
+  margin-bottom: 12px;
+  color: #e5564a;
+}
+.error-screen pre {
+  background: #0d0a06;
+  padding: 12px;
+  border-radius: 8px;
+  margin: 12px 0;
+  overflow: auto;
+  font-size: 11px;
+  max-height: 300px;
+}
+.error-screen button {
+  padding: 12px 20px;
+  font-size: 16px;
+  background: #e08a3c;
+  color: #1a1410;
+  border: none;
+  border-radius: 10px;
+  font-weight: 700;
+  margin-top: 10px;
+}
+
+/* ============================================================
+   6. АДАПТАЦИЯ ПОД ПЛАНШЕТЫ И ТЕЛЕФОНЫ
+   ============================================================ */
+@media (max-width: 860px) {
+  .posts-layout { grid-template-columns: 1fr; }
+  .calendar { position: static; }
+}
+
+@media (max-width: 640px) {
+  body { font-size: 14px; }
+
+  .header__inner { padding: 10px 12px; gap: 6px; }
+  .logo { font-size: 15px; }
+  .icon-btn { width: 40px; height: 40px; font-size: 14px; }
+
+  /* На телефоне скрываем имя, оставляем аватар */
+  .user-chip { padding: 5px; min-width: 42px; }
+  .user-chip span:not(.avatar) { display: none; }
+
+  .crumbs { padding-left: 12px; padding-right: 12px; }
+  #view { padding: 14px 12px 60px; }
+
+  .title { font-size: 18px; }
+
+  .grade-row { flex-direction: column; gap: 10px; padding: 14px; }
+  .grade-row__label { padding-top: 0; }
+  .grade-row__classes { gap: 6px; }
+
+  .chat-cards { grid-template-columns: 1fr; }
+  .subjects { grid-template-columns: 1fr; }
+  .posts { grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 10px; }
+  .post__body { padding: 10px; }
+  .post__title { font-size: 13px; }
+
+  .posts-head { flex-direction: column; align-items: stretch; }
+
+  .field-row { grid-template-columns: 1fr; }
+  .form-actions { flex-direction: column-reverse; }
+  .form-actions .btn { width: 100%; }
+
+  .overlay { padding: 10px; }
+  .modal { padding: 18px; border-radius: 14px; max-height: none; }
+  .modal--detail { max-height: none; }
+
+  /* Пуш-уведомление выезжает сверху на всю ширину */
+  .push {
+    left: 10px;
+    right: 10px;
+    top: 60px;
+    min-width: 0;
+    max-width: none;
+    transform: translateY(-200%);
+  }
+  .push--show { transform: translateY(0); }
+
+  .user-menu { right: 10px; left: 10px; top: 56px; }
+  .chat-messages { max-height: 50vh; }
+
+  /* Кнопки отправки — на всю ширину */
+  .chat-input-row,
+  .comment-form { flex-direction: column; }
+  .chat-input-row .btn,
+  .comment-form .btn { width: 100%; }
+}
+
+@media (max-width: 380px) {
+  .posts { grid-template-columns: 1fr; }
+}
+</style>
+</head>
+<body>
+
+<!-- ============================================================
+     ЭКРАН ОШИБКИ (появляется, если что-то упадёт)
+     ============================================================ -->
+<div id="error-screen" class="error-screen" style="display:none"></div>
+
+<!-- ============================================================
+     ШАПКА
+     ============================================================ -->
+<header class="header">
+  <div class="header__inner">
+    <div class="logo">Конспект<em>Хаб</em></div>
+    <div class="header__spacer"></div>
+
+    <button class="icon-btn" id="btn-notifications" aria-label="Уведомления">
+      🔔<span class="badge" id="badge-count" style="display:none">0</span>
+    </button>
+    <button class="icon-btn" id="btn-settings" aria-label="Настройки">⚙️</button>
+
+    <div class="user-chip" id="btn-user-menu">
+      <div class="avatar" id="user-avatar">?</div>
+      <span id="user-name">Гость</span>
+    </div>
+  </div>
+</header>
+
+<!-- Меню пользователя (скрыто по умолчанию) -->
+<div class="user-menu" id="user-menu">
+  <div class="user-menu__head">
+    <div class="user-menu__name" id="menu-name">—</div>
+    <div class="user-menu__sub">Вы вошли в систему</div>
+  </div>
+  <button class="user-menu__item" id="btn-logout" type="button">🚪 <span>Выйти</span></button>
+</div>
+
+<!-- ============================================================
+     ХЛЕБНЫЕ КРОШКИ И ОСНОВНОЙ КОНТЕНТ
+     ============================================================ -->
+<div class="crumbs" id="crumbs"></div>
+<main id="view"></main>
+
+<!-- ============================================================
+     ФУТЕР
+     ============================================================ -->
+<footer class="footer">
+  <div class="footer__inner">
+    <div>© 2026 КонспектХаб · 🍁</div>
+    <div class="footer__credit">Создатель: <em>Орлов Иван, 10а</em></div>
+  </div>
+</footer>
+
+<!-- ============================================================
+     МОДАЛЬНОЕ ОКНО: АУТЕНТИФИКАЦИЯ
+     ============================================================ -->
+<div class="overlay" id="overlay-auth">
+  <div class="modal">
+    <h2 id="auth-title">Добро пожаловать!</h2>
+    <p>Войдите или создайте аккаунт, чтобы публиковать конспекты и общаться.</p>
+
+    <div class="auth-tabs">
+      <button class="auth-tab auth-tab--active" id="tab-login" type="button">Вход</button>
+      <button class="auth-tab" id="tab-register" type="button">Регистрация</button>
+    </div>
+
+    <div class="auth-form">
+      <div class="auth-field">
+        <label>Имя</label>
+        <input type="text" id="auth-name" maxlength="30" placeholder="Иван Орлов" autocomplete="username">
+      </div>
+      <div class="auth-field">
+        <label>Пароль</label>
+        <input type="password" id="auth-password" maxlength="40" placeholder="Минимум 4 символа" autocomplete="current-password">
+      </div>
+      <div class="auth-error" id="auth-error"></div>
+      <button class="btn btn--primary" id="auth-submit" type="button" style="width:100%">Войти</button>
+      <div class="hint" style="text-align:center">Данные хранятся локально в браузере.</div>
+    </div>
+  </div>
+</div>
+
+<!-- ============================================================
+     МОДАЛЬНОЕ ОКНО: ПРОСМОТР ФОТО
+     ============================================================ -->
+<div class="overlay" id="overlay-image">
+  <div class="modal modal--image">
+    <img id="zoom-image" src="" alt="">
+  </div>
+</div>
+
+<!-- ============================================================
+     МОДАЛЬНОЕ ОКНО: ПРОСМОТР КОНСПЕКТА
+     ============================================================ -->
+<div class="overlay" id="overlay-detail">
+  <div class="modal modal--detail">
+    <button class="detail-close" data-close type="button" aria-label="Закрыть">&times;</button>
+    <div class="detail-scroll" id="detail-content"></div>
+  </div>
+</div>
+
+<!-- ============================================================
+     МОДАЛЬНОЕ ОКНО: РЕДАКТИРОВАНИЕ КОНСПЕКТА
+     ============================================================ -->
+<div class="overlay" id="overlay-edit">
+  <div class="modal modal--wide">
+    <h2>Редактировать конспект</h2>
+    <p>Изменения увидят все, кто откроет этот предмет.</p>
+
+    <div class="field">
+      <label>Фото</label>
+      <label class="file-label" id="edit-file-label" for="edit-file-input">
+        📸 <span id="edit-file-text">Оставить текущее</span>
+      </label>
+      <input type="file" id="edit-file-input" accept="image/*" hidden>
+      <img id="edit-preview" class="preview-img" alt="">
+    </div>
+
+    <div class="field">
+      <label>Название</label>
+      <input type="text" id="edit-title" maxlength="80">
+    </div>
+
+    <div class="field">
+      <label>Описание</label>
+      <textarea id="edit-desc" rows="3" maxlength="250"></textarea>
+    </div>
+
+    <div class="field-row">
+      <div class="field" style="margin-bottom:0">
+        <label>Дата</label>
+        <input type="date" id="edit-date">
+      </div>
+      <div class="field" style="margin-bottom:0">
+        <label>Время</label>
+        <input type="time" id="edit-time">
+      </div>
+    </div>
+
+    <div class="hint">Можно поставить любую дату — прошедшую, текущую или будущую.</div>
+
+    <div class="form-actions">
+      <button class="btn btn--ghost" id="edit-cancel" type="button">Отмена</button>
+      <button class="btn btn--primary" id="edit-save" type="button">Сохранить</button>
+    </div>
+  </div>
+</div>
+
+<!-- ============================================================
+     МОДАЛЬНОЕ ОКНО: ЦЕНТР УВЕДОМЛЕНИЙ
+     ============================================================ -->
+<div class="overlay" id="overlay-notifications">
+  <div class="modal modal--wide" style="max-width:560px">
+    <div class="modal__head">
+      <h2>🔔 Уведомления</h2>
+      <button class="modal__close" data-close type="button" aria-label="Закрыть">&times;</button>
+    </div>
+    <div id="notifications-content"></div>
+  </div>
+</div>
+
+<!-- ============================================================
+     МОДАЛЬНОЕ ОКНО: НАСТРОЙКИ УВЕДОМЛЕНИЙ
+     ============================================================ -->
+<div class="overlay" id="overlay-settings">
+  <div class="modal modal--wide" style="max-width:500px">
+    <div class="modal__head">
+      <h2>⚙️ Настройки уведомлений</h2>
+      <button class="modal__close" data-close type="button" aria-label="Закрыть">&times;</button>
+    </div>
+
+    <div class="settings">
+      <!-- Чаты -->
+      <div class="settings-group">
+        <label class="setting-row">
+          <div class="setting-row__info">
+            <div class="setting-row__title">💬 Уведомления в чатах</div>
+            <div class="setting-row__desc">Новые сообщения в чатах параллелей</div>
+          </div>
+          <input type="checkbox" id="set-chat" class="switch">
+        </label>
+        <div class="settings-sub" id="set-chat-grades-wrap">
+          <div class="settings-sub__label">Параллели</div>
+          <div class="grade-chips" id="set-chat-grades"></div>
+        </div>
+      </div>
+
+      <!-- Конспекты -->
+      <div class="settings-group">
+        <label class="setting-row">
+          <div class="setting-row__info">
+            <div class="setting-row__title">📝 Уведомления о конспектах</div>
+            <div class="setting-row__desc">Новые конспекты в разделах</div>
+          </div>
+          <input type="checkbox" id="set-posts" class="switch">
+        </label>
+      </div>
+
+      <!-- Звук -->
+      <div class="settings-group">
+        <label class="setting-row">
+          <div class="setting-row__info">
+            <div class="setting-row__title">🔊 Звук</div>
+            <div class="setting-row__desc">Звуковой сигнал при уведомлении</div>
+          </div>
+          <input type="checkbox" id="set-sound" class="switch">
+        </label>
+      </div>
+
+      <!-- Счётчики -->
+      <div class="settings-group">
+        <label class="setting-row">
+          <div class="setting-row__info">
+            <div class="setting-row__title">🔢 Счётчики непрочитанных</div>
+            <div class="setting-row__desc">Числа рядом с чатами и классами</div>
+          </div>
+          <input type="checkbox" id="set-badges" class="switch">
+        </label>
+      </div>
+
+      <!-- Системные уведомления браузера -->
+      <div class="settings-group">
+        <div class="setting-row__info" style="margin-bottom:8px">
+          <div class="setting-row__title">🌐 Уведомления браузера</div>
+          <div class="setting-row__desc" id="browser-push-status">Разрешить системные уведомления</div>
+        </div>
+        <button class="btn btn--ghost" id="btn-browser-push" type="button" style="width:100%">Запросить разрешение</button>
+      </div>
+
+      <button class="btn btn--ghost" id="btn-mark-all-read" type="button" style="width:100%">
+        ✓ Отметить всё прочитанным
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- Тост -->
+<div class="toast" id="toast"></div>
+
+<script>
+/* ============================================================
+   КОНСПЕКТХАБ — основной скрипт
+   ============================================================ */
+(function () {
+'use strict';
+
+/* ------------------------------------------------------------
+   Обработчик ошибок: если что-то упадёт — покажем экран с текстом
+   ------------------------------------------------------------ */
+window.onerror = function (msg, url, line, col, err) {
+  var box = document.getElementById('error-screen');
+  if (!box) return;
+  box.style.display = 'block';
+  box.innerHTML =
+    '<h2>⚠️ Что-то пошло не так</h2>' +
+    '<p>Скопируйте текст ниже и покажите разработчику:</p>' +
+    '<pre>' + (msg || 'Ошибка') + '\n' + line + ':' + col + '\n' +
+    (err && err.stack ? err.stack : '') + '</pre>' +
+    '<button onclick="location.reload()">Обновить страницу</button>';
+  return false;
+};
+
+/* ------------------------------------------------------------
+   1. КОНСТАНТЫ
+   ------------------------------------------------------------ */
+
+// Классы 7-11. У 10-х параллели свои буквы (в алфавитном порядке)
+var GRADES = [7, 8, 9, 10, 11];
+var LETTERS_DEFAULT = ['А', 'Б', 'В'];
+var LETTERS_10 = ['А', 'И', 'К', 'Л', 'М', 'П', 'С', 'Ф', 'Х'];
+
+var CLASSES = [];
+for (var i = 0; i < GRADES.length; i++) {
+  var grade = GRADES[i];
+  var letters = (grade === 10) ? LETTERS_10 : LETTERS_DEFAULT;
+  for (var j = 0; j < letters.length; j++) {
+    CLASSES.push(grade + letters[j]);
+  }
+}
+
+// Все предметы
+var SUBJECTS = [
+  { id: 'math',  name: 'Математика',     icon: '➗' },
+  { id: 'rus',   name: 'Русский язык',   icon: '📖' },
+  { id: 'lit',   name: 'Литература',     icon: '📚' },
+  { id: 'hist',  name: 'История',        icon: '🏛️' },
+  { id: 'soc',   name: 'Обществознание', icon: '⚖️' },
+  { id: 'phys',  name: 'Физика',         icon: '⚛️' },
+  { id: 'chem',  name: 'Химия',          icon: '🧪' },
+  { id: 'bio',   name: 'Биология',       icon: '🧬' },
+  { id: 'geo',   name: 'География',      icon: '🌍' },
+  { id: 'eng',   name: 'Английский',     icon: '🇬🇧' },
+  { id: 'inf',   name: 'Информатика',    icon: '💻' },
+  { id: 'other', name: 'Другое',         icon: '📌' }
+];
+
+var MONTHS = [
+  'Январь', 'Февраль', 'Март', 'Апрель', 'Май', 'Июнь',
+  'Июль', 'Август', 'Сентябрь', 'Октябрь', 'Ноябрь', 'Декабрь'
+];
+
+// Ключи localStorage
+var KEY_POSTS    = 'kh_posts';
+var KEY_USERS    = 'kh_users';
+var KEY_SESSION  = 'kh_session';
+var KEY_CHATS    = 'kh_chats';
+var KEY_SEEN     = 'kh_seen';
+var KEY_SETTINGS = 'kh_settings';
+
+// Настройки уведомлений по умолчанию
+var DEFAULT_SETTINGS = {
+  chat: true,
+  chatGrades: { 7: true, 8: true, 9: true, 10: true, 11: true },
+  posts: true,
+  sound: true,
+  badges: true
+};
+
+/* ------------------------------------------------------------
+   2. ХРАНИЛИЩЕ (localStorage с защитой от ошибок)
+   ------------------------------------------------------------ */
+function storageGet(key, fallback) {
+  try {
+    var value = localStorage.getItem(key);
+    return value === null ? fallback : JSON.parse(value);
+  } catch (e) {
+    return fallback;
+  }
+}
+
+function storageSet(key, value) {
+  try {
+    localStorage.setItem(key, JSON.stringify(value));
+    return true;
+  } catch (e) {
+    return false;
+  }
+}
+
+function storageGetRaw(key) {
+  try { return localStorage.getItem(key); } catch (e) { return null; }
+}
+
+function storageSetRaw(key, value) {
+  try { localStorage.setItem(key, value); return true; } catch (e) { return false; }
+}
+
+function storageRemove(key) {
+  try { localStorage.removeItem(key); } catch (e) {}
+}
+
+/* ------------------------------------------------------------
+   3. СОСТОЯНИЕ ПРИЛОЖЕНИЯ
+   ------------------------------------------------------------ */
+var state = {
+  user: '',
+  users: storageGet(KEY_USERS, {}) || {},
+  classId: null,
+  subject: null,
+  filterDate: null,
+  calendar: null,
+  chatGrade: null,
+  editingId: null,
+  detailId: null,
+  posts: storageGet(KEY_POSTS, []) || [],
+  chats: storageGet(KEY_CHATS, {}) || {},
+  seen: storageGet(KEY_SEEN, null) || { chats: {}, subjects: {} },
+  settings: mergeSettings(storageGet(KEY_SETTINGS, {}) || {}),
+  authMode: 'login'
+};
+
+// Объединяем сохранённые настройки с настройками по умолчанию
+function mergeSettings(saved) {
+  var result = {};
+  var k;
+  for (k in DEFAULT_SETTINGS) {
+    if (DEFAULT_SETTINGS.hasOwnProperty(k)) result[k] = DEFAULT_SETTINGS[k];
+  }
+  for (k in saved) {
+    if (saved.hasOwnProperty(k)) result[k] = saved[k];
+  }
+  return result;
+}
+
+// Восстанавливаем сессию
+var savedSession = storageGetRaw(KEY_SESSION);
+if (savedSession && state.users[savedSession]) {
+  state.user = savedSession;
+}
+
+// Инициализация чатов и настроек
+for (var gi = 0; gi < GRADES.length; gi++) {
+  if (!state.chats[GRADES[gi]]) state.chats[GRADES[gi]] = [];
+}
+if (!state.settings.chatGrades) {
+  state.settings.chatGrades = { 7: true, 8: true, 9: true, 10: true, 11: true };
+}
+if (!state.seen.chats) state.seen.chats = {};
+if (!state.seen.subjects) state.seen.subjects = {};
+
+/* ------------------------------------------------------------
+   4. УТИЛИТЫ
+   ------------------------------------------------------------ */
+function $(id) { return document.getElementById(id); }
+
+function savePosts() { return storageSet(KEY_POSTS, state.posts); }
+function saveChats() { return storageSet(KEY_CHATS, state.chats); }
+function saveUsers() { return storageSet(KEY_USERS, state.users); }
+function saveSeen() { storageSet(KEY_SEEN, state.seen); }
+function saveSettings() { storageSet(KEY_SETTINGS, state.settings); }
+
+// Всплывающее сообщение снизу
+function toast(message) {
+  var el = $('toast');
+  if (!el) return;
+  el.textContent = message;
+  el.classList.add('toast--show');
+  clearTimeout(el._timer);
+  el._timer = setTimeout(function () {
+    el.classList.remove('toast--show');
+  }, 2400);
+}
+
+// Правильное склонение: 1 конспект, 2 конспекта, 5 конспектов
+function plural(n, forms) {
+  var n10 = n % 10;
+  var n100 = n % 100;
+  if (n10 === 1 && n100 !== 11) return forms[0];
+  if (n10 >= 2 && n10 <= 4 && (n100 < 10 || n100 >= 20)) return forms[1];
+  return forms[2];
+}
+
+// Относительное время ("5 мин назад" / "через 2 дня")
+function timeAgo(ts) {
+  var diff = ts - Date.now();
+
+  if (diff > 60000) {
+    var s = diff / 1000;
+    if (s < 3600) return 'через ' + Math.round(s / 60) + ' мин';
+    if (s < 86400) return 'через ' + Math.round(s / 3600) + ' ч';
+    if (s < 2592000) return 'через ' + Math.round(s / 86400) + ' дн';
+    return 'запланировано';
+  }
+
+  var x = -diff / 1000;
+  if (x < 60) return 'только что';
+  if (x < 3600) return Math.floor(x / 60) + ' мин назад';
+  if (x < 86400) return Math.floor(x / 3600) + ' ч назад';
+  if (x < 604800) return Math.floor(x / 86400) + ' дн назад';
+  return new Date(ts).toLocaleDateString('ru-RU');
+}
+
+// Форматирование даты
+function formatDate(ts) {
+  return new Date(ts).toLocaleDateString('ru-RU', {
+    day: '2-digit', month: '2-digit', year: 'numeric'
+  });
+}
+function formatTime(ts) {
+  return new Date(ts).toLocaleTimeString('ru-RU', {
+    hour: '2-digit', minute: '2-digit'
+  });
+}
+function formatDateTime(ts) {
+  return formatDate(ts) + ', ' + formatTime(ts);
+}
+
+// Ключ даты вида '2026-09-28'
+function dateKey(ts) {
+  var d = new Date(ts);
+  return d.getFullYear() + '-' +
+    String(d.getMonth() + 1).padStart(2, '0') + '-' +
+    String(d.getDate()).padStart(2, '0');
+}
+
+// '2026-09-28' -> '28.09.2026'
+function formatFilterDate(key) {
+  var parts = key.split('-');
+  return parts[2] + '.' + parts[1] + '.' + parts[0];
+}
+
+// Значения для input[type=date] и input[type=time]
+function inputDateValue(ts) {
+  var d = new Date(ts);
+  return d.getFullYear() + '-' +
+    String(d.getMonth() + 1).padStart(2, '0') + '-' +
+    String(d.getDate()).padStart(2, '0');
+}
+function inputTimeValue(ts) {
+  var d = new Date(ts);
+  return String(d.getHours()).padStart(2, '0') + ':' +
+    String(d.getMinutes()).padStart(2, '0');
+}
+
+// Объединяем дату и время из input в timestamp
+function combineDateTime(dateStr, timeStr) {
+  if (!dateStr) return null;
+  var dp = dateStr.split('-').map(Number);
+  var hh = 0, mm = 0;
+  if (timeStr) {
+    var tp = timeStr.split(':').map(Number);
+    hh = tp[0] || 0;
+    mm = tp[1] || 0;
+  }
+  return new Date(dp[0], dp[1] - 1, dp[2], hh, mm, 0, 0).getTime();
+}
+
+// Дата в будущем?
+function isFuture(ts) {
+  return ts > Date.now() + 60000;
+}
+
+// Защита от XSS
+function escapeHtml(s) {
+  return String(s).replace(/[&<>"']/g, function (c) {
+    return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
+  });
+}
+
+// Инициалы для аватара
+function initials(name) {
+  var parts = String(name).trim().split(/\s+/);
+  if (!parts.length || !parts[0]) return '?';
+  return (parts[0][0] + (parts[1] ? parts[1][0] : '')).toUpperCase();
+}
+
+// Уникальный ID
+function uid() {
+  return Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
+}
+
+// Обрезать длинный текст
+function truncate(s, n) {
+  s = String(s);
+  return s.length > n ? s.slice(0, n - 1) + '…' : s;
+}
+
+// Найти пост по ID
+function findPost(id) {
+  for (var i = 0; i < state.posts.length; i++) {
+    if (state.posts[i].id === id) return state.posts[i];
+  }
+  return null;
+}
+
+// Сжать картинку через canvas (чтобы не забить localStorage)
+function compressImage(dataUrl, maxSide, quality, callback) {
+  var img = new Image();
+  img.onload = function () {
+    var w = img.width;
+    var h = img.height;
+    if (w > maxSide || h > maxSide) {
+      if (w > h) {
+        h = Math.round(h * maxSide / w);
+        w = maxSide;
+      } else {
+        w = Math.round(w * maxSide / h);
+        h = maxSide;
+      }
+    }
+    try {
+      var canvas = document.createElement('canvas');
+      canvas.width = w;
+      canvas.height = h;
+      canvas.getContext('2d').drawImage(img, 0, 0, w, h);
+      callback(canvas.toDataURL('image/jpeg', quality));
+    } catch (e) {
+      callback(dataUrl);
+    }
+  };
+  img.onerror = function () { callback(dataUrl); };
+  img.src = dataUrl;
+}
+
+/* ------------------------------------------------------------
+   5. УВЕДОМЛЕНИЯ — подсчёт непрочитанных
+   ------------------------------------------------------------ */
+
+// Непрочитанные в чате
+function unreadInChat(grade) {
+  var seenAt = state.seen.chats[grade] || 0;
+  var msgs = state.chats[grade] || [];
+  var count = 0;
+  for (var i = 0; i < msgs.length; i++) {
+    if (msgs[i].author !== state.user && msgs[i].createdAt > seenAt) count++;
+  }
+  return count;
+}
+
+// Непрочитанные в предмете (по конспектам)
+function unreadInSubject(classId, subjectId) {
+  var key = classId + ':' + subjectId;
+  var seenAt = state.seen.subjects[key] || 0;
+  var count = 0;
+  for (var i = 0; i < state.posts.length; i++) {
+    var p = state.posts[i];
+    if (p.classId === classId && p.subject === subjectId &&
+        p.author !== state.user && p.createdAt > seenAt) count++;
+  }
+  return count;
+}
+
+// Непрочитанные во всём классе
+function unreadInClass(classId) {
+  var sum = 0;
+  for (var i = 0; i < SUBJECTS.length; i++) {
+    sum += unreadInSubject(classId, SUBJECTS[i].id);
+  }
+  return sum;
+}
+
+// Всего непрочитанных
+function totalUnread() {
+  var n = 0;
+  for (var i = 0; i < GRADES.length; i++) n += unreadInChat(GRADES[i]);
+  for (var j = 0; j < state.posts.length; j++) {
+    var p = state.posts[j];
+    if (p.author === state.user) continue;
+    var key = p.classId + ':' + p.subject;
+    if (p.createdAt > (state.seen.subjects[key] || 0)) n++;
+  }
+  return n;
+}
+
+// Обновить бейдж на колокольчике
+function updateBellBadge() {
+  var badge = $('badge-count');
+  if (!badge) return;
+  var n = state.settings.badges ? totalUnread() : 0;
+  if (n > 0) {
+    badge.textContent = n > 99 ? '99+' : n;
+    badge.style.display = 'flex';
+  } else {
+    badge.style.display = 'none';
+  }
+}
+
+// Пометить как прочитанное
+function markChatSeen(grade) {
+  state.seen.chats[grade] = Date.now();
+  saveSeen();
+}
+function markSubjectSeen(classId, subjectId) {
+  state.seen.subjects[classId + ':' + subjectId] = Date.now();
+  saveSeen();
+}
+function markAllSeen() {
+  var now = Date.now();
+  for (var i = 0; i < GRADES.length; i++) state.seen.chats[GRADES[i]] = now;
+  for (var j = 0; j < state.posts.length; j++) {
+    var p = state.posts[j];
+    state.seen.subjects[p.classId + ':' + p.subject] = now;
+  }
+  saveSeen();
+}
+
+// Собрать список всех непрочитанных для окна уведомлений
+function getUnreadItems() {
+  var items = [];
+
+  for (var i = 0; i < GRADES.length; i++) {
+    var g = GRADES[i];
+    var seenAt = state.seen.chats[g] || 0;
+    var msgs = state.chats[g] || [];
+    for (var j = 0; j < msgs.length; j++) {
+      if (msgs[j].author !== state.user && msgs[j].createdAt > seenAt) {
+        items.push({
+          kind: 'chat', grade: g, id: msgs[j].id,
+          author: msgs[j].author, text: msgs[j].text, createdAt: msgs[j].createdAt
+        });
+      }
+    }
+  }
+
+  for (var p = 0; p < state.posts.length; p++) {
+    var post = state.posts[p];
+    if (post.author === state.user) continue;
+    var key = post.classId + ':' + post.subject;
+    if (post.createdAt > (state.seen.subjects[key] || 0)) {
+      items.push({
+        kind: 'post', classId: post.classId, subject: post.subject, id: post.id,
+        author: post.author, title: post.title, createdAt: post.createdAt
+      });
+    }
+  }
+
+  items.sort(function (a, b) { return b.createdAt - a.createdAt; });
+  return items;
+}
+
+// Отрисовать центр уведомлений
+function renderNotificationsCenter() {
+  var items = getUnreadItems();
+  var box = $('notifications-content');
+  if (!box) return;
+
+  if (!items.length) {
+    box.innerHTML =
+      '<div class="notif-empty">' +
+        '<div class="notif-empty__icon">🍂</div>' +
+        '<div>Нет новых уведомлений</div>' +
+      '</div>';
+    return;
+  }
+
+  var html = '<div class="notif-list">';
+  for (var i = 0; i < items.length; i++) {
+    var it = items[i];
+
+    if (it.kind === 'chat') {
+      html +=
+        '<div class="notif-item" data-notif-chat="' + it.grade + '">' +
+          '<div class="notif-item__icon">💬</div>' +
+          '<div class="notif-item__body">' +
+            '<div class="notif-item__title">Чат ' + it.grade + '-х · <strong>' + escapeHtml(it.author) + '</strong></div>' +
+            '<div class="notif-item__text">' + escapeHtml(truncate(it.text, 100)) + '</div>' +
+            '<div class="notif-item__time">' + formatDateTime(it.createdAt) + '</div>' +
+          '</div>' +
+        '</div>';
+    } else {
+      var subj = null;
+      for (var s = 0; s < SUBJECTS.length; s++) {
+        if (SUBJECTS[s].id === it.subject) { subj = SUBJECTS[s]; break; }
+      }
+      if (!subj) subj = { icon: '', name: '' };
+      html +=
+        '<div class="notif-item" data-notif-post="' + it.classId + '|' + it.subject + '">' +
+          '<div class="notif-item__icon">📝</div>' +
+          '<div class="notif-item__body">' +
+            '<div class="notif-item__title">' + escapeHtml(it.classId) + ' · ' + subj.icon +
+              ' ' + escapeHtml(subj.name) + ' · <strong>' + escapeHtml(it.author) + '</strong></div>' +
+            '<div class="notif-item__text">' + escapeHtml(truncate(it.title, 100)) + '</div>' +
+            '<div class="notif-item__time">' + formatDateTime(it.createdAt) + '</div>' +
+          '</div>' +
+        '</div>';
+    }
+  }
+  html += '</div>';
+  box.innerHTML = html;
+}
+
+// Звуковой сигнал
+function beep() {
+  if (!state.settings.sound) return;
+  try {
+    var Ctx = window.AudioContext || window.webkitAudioContext;
+    if (!Ctx) return;
+    var ctx = new Ctx();
+    var osc = ctx.createOscillator();
+    var gain = ctx.createGain();
+    osc.connect(gain);
+    gain.connect(ctx.destination);
+    osc.type = 'sine';
+    osc.frequency.value = 760;
+    gain.gain.setValueAtTime(0.08, ctx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.22);
+    osc.start();
+    osc.stop(ctx.currentTime + 0.22);
+    setTimeout(function () { try { ctx.close(); } catch (e) {} }, 500);
+  } catch (e) {}
+}
+
+// Всплывающее уведомление справа сверху
+function showPush(kind, title, text, onClick) {
+  var el = document.createElement('div');
+  el.className = 'push';
+  el.innerHTML =
+    '<div class="push__icon">' + (kind === 'chat' ? '💬' : '📝') + '</div>' +
+    '<div class="push__body">' +
+      '<div class="push__title">' + escapeHtml(title) + '</div>' +
+      '<div class="push__text">' + escapeHtml(text) + '</div>' +
+    '</div>';
+  el.addEventListener('click', function () {
+    if (onClick) onClick();
+    if (el.parentNode) el.parentNode.removeChild(el);
+  });
+  document.body.appendChild(el);
+  setTimeout(function () { el.classList.add('push--show'); }, 10);
+  setTimeout(function () {
+    el.classList.remove('push--show');
+    setTimeout(function () {
+      if (el.parentNode) el.parentNode.removeChild(el);
+    }, 300);
+  }, 5000);
+}
+
+// Системное уведомление браузера
+function showBrowserNotification(title, body) {
+  try {
+    if (!('Notification' in window)) return;
+    if (Notification.permission !== 'granted') return;
+    new Notification(title, { body: body });
+  } catch (e) {}
+}
+
+/* ------------------------------------------------------------
+   6. ПОЛЬЗОВАТЕЛЬ / АУТЕНТИФИКАЦИЯ
+   ------------------------------------------------------------ */
+function updateUserChip() {
+  var name = state.user || 'Гость';
+  var el1 = $('user-name');
+  var el2 = $('user-avatar');
+  var el3 = $('menu-name');
+  if (el1) el1.textContent = name;
+  if (el2) el2.textContent = state.user ? initials(name) : '?';
+  if (el3) el3.textContent = state.user || '—';
+}
+
+function showAuthError(msg) {
+  var el = $('auth-error');
+  if (!el) return;
+  el.textContent = msg;
+  el.classList.add('auth-error--show');
+  setTimeout(function () {
+    el.classList.remove('auth-error--show');
+  }, 4000);
+}
+
+function hideAuthError() {
+  var el = $('auth-error');
+  if (el) el.classList.remove('auth-error--show');
+}
+
+// Открыть окно входа/регистрации
+function openAuth(mode) {
+  state.authMode = mode || 'login';
+
+  var tabLogin = $('tab-login');
+  var tabRegister = $('tab-register');
+  if (tabLogin) tabLogin.classList.toggle('auth-tab--active', state.authMode === 'login');
+  if (tabRegister) tabRegister.classList.toggle('auth-tab--active', state.authMode === 'register');
+
+  var title = $('auth-title');
+  var submit = $('auth-submit');
+  if (title) title.textContent = state.authMode === 'login' ? 'Вход в аккаунт' : 'Регистрация';
+  if (submit) submit.textContent = state.authMode === 'login' ? 'Войти' : 'Создать аккаунт';
+
+  var nameInput = $('auth-name');
+  var passInput = $('auth-password');
+  if (nameInput) nameInput.value = '';
+  if (passInput) passInput.value = '';
+
+  hideAuthError();
+  var overlay = $('overlay-auth');
+  if (overlay) overlay.classList.add('overlay--open');
+
+  // Автофокус только на десктопе — на телефоне это мешает
+  var isDesktop = false;
+  try { isDesktop = window.matchMedia('(min-width: 768px)').matches; } catch (e) {}
+  if (isDesktop && nameInput) {
+    setTimeout(function () {
+      try { nameInput.focus(); } catch (e) {}
+    }, 200);
+  }
+}
+
+// Отправить форму входа/регистрации
+function submitAuth() {
+  var name = ($('auth-name').value || '').trim();
+  var pass = $('auth-password').value || '';
+
+  if (!name || name.length < 2) {
+    showAuthError('Имя должно быть минимум 2 символа');
+    return;
+  }
+  if (!pass || pass.length < 4) {
+    showAuthError('Пароль должен быть минимум 4 символа');
+    return;
+  }
+
+  if (state.authMode === 'register') {
+    if (state.users[name]) {
+      showAuthError('Это имя уже занято');
+      return;
+    }
+    state.users[name] = { password: pass, createdAt: Date.now() };
+    if (!saveUsers()) {
+      showAuthError('Не удалось сохранить. Возможно, переполнено хранилище.');
+      return;
+    }
+    state.user = name;
+    storageSetRaw(KEY_SESSION, name);
+    updateUserChip();
+    $('overlay-auth').classList.remove('overlay--open');
+    toast('Аккаунт создан! Привет, ' + name);
+    render();
+  } else {
+    var user = state.users[name];
+    if (!user) {
+      showAuthError('Пользователь с таким именем не найден');
+      return;
+    }
+    if (user.password !== pass) {
+      showAuthError('Неверный пароль');
+      return;
+    }
+    state.user = name;
+    storageSetRaw(KEY_SESSION, name);
+    updateUserChip();
+    $('overlay-auth').classList.remove('overlay--open');
+    toast('С возвращением, ' + name);
+    render();
+  }
+}
+
+/* ------------------------------------------------------------
+   7. НАВИГАЦИЯ
+   ------------------------------------------------------------ */
+function ensureCalendar() {
+  if (!state.calendar) {
+    var now = new Date();
+    state.calendar = { year: now.getFullYear(), month: now.getMonth() };
+  }
+}
+
+function goHome() {
+  state.classId = null;
+  state.subject = null;
+  state.filterDate = null;
+  state.chatGrade = null;
+  render();
+}
+
+function goClass(classId) {
+  state.classId = classId;
+  state.subject = null;
+  state.filterDate = null;
+  state.chatGrade = null;
+  render();
+}
+
+function goSubject(subjectId) {
+  state.subject = subjectId;
+  state.filterDate = null;
+  state.chatGrade = null;
+  ensureCalendar();
+  render();
+}
+
+function goChat(grade) {
+  state.chatGrade = String(grade);
+  state.classId = null;
+  state.subject = null;
+  render();
+  setTimeout(scrollChatToBottom, 40);
+}
+
+/* ------------------------------------------------------------
+   8. ХЛЕБНЫЕ КРОШКИ
+   ------------------------------------------------------------ */
+function renderBreadcrumbs() {
+  var el = $('crumbs');
+  if (!el) return;
+
+  if (!state.classId && !state.chatGrade) {
+    el.innerHTML = '';
+    return;
+  }
+
+  var html = '<button data-crumb="home" type="button">🏠 Все классы</button>';
+
+  if (state.chatGrade) {
+    html += '<span class="sep">/</span>' +
+            '<span class="current">💬 Чат ' + escapeHtml(state.chatGrade) + '-х</span>';
+  } else {
+    html += '<span class="sep">/</span>';
+
+    if (!state.subject) {
+      html += '<span class="current">' + escapeHtml(state.classId) + '</span>';
+    } else {
+      html += '<button data-crumb="class" type="button">' + escapeHtml(state.classId) + '</button>';
+      var subj = null;
+      for (var i = 0; i < SUBJECTS.length; i++) {
+        if (SUBJECTS[i].id === state.subject) { subj = SUBJECTS[i]; break; }
+      }
+      if (subj) {
+        html += '<span class="sep">/</span>' +
+                '<span class="current">' + subj.icon + ' ' + escapeHtml(subj.name) + '</span>';
+      }
+    }
+
+    var m = state.classId.match(/^\d+/);
+    var grade = m ? m[0] : '';
+    html += '<span class="spacer"></span>' +
+            '<button class="chat-link" data-chat-grade="' + grade + '" type="button">💬 Чат</button>';
+  }
+
+  el.innerHTML = html;
+
+  var buttons = el.querySelectorAll('[data-crumb]');
+  for (var j = 0; j < buttons.length; j++) {
+    (function (btn) {
+      btn.addEventListener('click', function () {
+        if (btn.getAttribute('data-crumb') === 'home') goHome();
+        else if (btn.getAttribute('data-crumb') === 'class') goClass(state.classId);
+      });
+    })(buttons[j]);
+  }
+}
+
+/* ------------------------------------------------------------
+   9. ГЛАВНЫЙ РЕНДЕР
+   ------------------------------------------------------------ */
+function render() {
+  renderBreadcrumbs();
+  if (state.chatGrade) renderChat();
+  else if (!state.classId) renderClasses();
+  else if (!state.subject) renderSubjects();
+  else renderPosts();
+  updateBellBadge();
+}
+
+/* Экран 1: Сетка классов */
+function renderClasses() {
+  var view = $('view');
+  if (!view) return;
+
+  // Группируем классы по параллелям
+  var grouped = {};
+  for (var i = 0; i < CLASSES.length; i++) {
+    var c = CLASSES[i];
+    var g = c.match(/^\d+/)[0];
+    if (!grouped[g]) grouped[g] = [];
+    grouped[g].push(c);
+  }
+
+  var showBadges = state.settings.badges;
+
+  // Карточки чатов параллелей
+  var chatCardsHtml = '';
+  for (var gi = 0; gi < GRADES.length; gi++) {
+    var grade = GRADES[gi];
+    var msgs = state.chats[grade] || [];
+    var last = msgs.length ? msgs[msgs.length - 1] : null;
+    var unread = showBadges ? unreadInChat(grade) : 0;
+
+    chatCardsHtml +=
+      '<button class="chat-card" data-chat-grade="' + grade + '" type="button">' +
+        (unread ? '<span class="chat-card__unread">' + (unread > 99 ? '99+' : unread) + '</span>' : '') +
+        '<div class="chat-card__icon">💬</div>' +
+        '<div>' +
+          '<div class="chat-card__name">Чат ' + grade + '-х классов</div>' +
+          '<div class="chat-card__preview">' +
+            (last ? escapeHtml(last.author) + ': ' + escapeHtml(truncate(last.text, 26)) : 'Нет сообщений') +
+          '</div>' +
+        '</div>' +
+      '</button>';
+  }
+
+  // Рядки с классами
+  var gradesHtml = '';
+  var keys = Object.keys(grouped);
+  for (var k = 0; k < keys.length; k++) {
+    var gradeKey = keys[k];
+    var list = grouped[gradeKey];
+    var classesHtml = '';
+
+    for (var j = 0; j < list.length; j++) {
+      var className = list[j];
+      var postCount = 0;
+      for (var p = 0; p < state.posts.length; p++) {
+        if (state.posts[p].classId === className) postCount++;
+      }
+      var unreadC = showBadges ? unreadInClass(className) : 0;
+
+      classesHtml +=
+        '<button class="class-btn" data-class="' + escapeHtml(className) + '" type="button">' +
+          (unreadC ? '<span class="unread-dot">' + (unreadC > 99 ? '99+' : unreadC) + '</span>' : '') +
+          escapeHtml(className) +
+          (postCount ? '<span class="class-btn__count">' + postCount + '</span>' : '') +
+        '</button>';
+    }
+
+    gradesHtml +=
+      '<div class="grade-row">' +
+        '<div class="grade-row__label">' + gradeKey + ' класс</div>' +
+        '<div class="grade-row__classes">' + classesHtml + '</div>' +
+      '</div>';
+  }
+
+  view.innerHTML =
+    '<h1 class="title">Выберите класс</h1>' +
+    '<div class="grades">' + gradesHtml + '</div>' +
+    '<section class="chats-section">' +
+      '<h2>Чаты параллелей</h2>' +
+      '<div class="chat-cards">' + chatCardsHtml + '</div>' +
+    '</section>';
+}
+
+/* Экран 2: Предметы класса */
+function renderSubjects() {
+  var view = $('view');
+  if (!view) return;
+
+  var showBadges = state.settings.badges;
+  var html = '<h1 class="title">' + escapeHtml(state.classId) +
+             ' · выберите предмет</h1><div class="subjects">';
+
+  for (var i = 0; i < SUBJECTS.length; i++) {
+    var subj = SUBJECTS[i];
+    var count = 0;
+    var lastTs = 0;
+
+    for (var j = 0; j < state.posts.length; j++) {
+      var p = state.posts[j];
+      if (p.classId === state.classId && p.subject === subj.id) {
+        count++;
+        if (p.createdAt > lastTs) lastTs = p.createdAt;
+      }
+    }
+
+    var unread = showBadges ? unreadInSubject(state.classId, subj.id) : 0;
+    var countLabel = count
+      ? (count + ' ' + plural(count, ['конспект', 'конспекта', 'конспектов']))
+      : 'пока пусто';
+    var lastLabel = lastTs
+      ? '<div class="subject-card__last">🕒 ' + formatDateTime(lastTs) + '</div>'
+      : '<div class="subject-card__empty">Нет публикаций</div>';
+
+    html +=
+      '<button class="subject-card" data-subject="' + subj.id + '" type="button">' +
+        (unread ? '<span class="unread-dot">' + (unread > 99 ? '99+' : unread) + '</span>' : '') +
+        '<div class="subject-card__head">' +
+          '<div class="subject-card__icon">' + subj.icon + '</div>' +
+          '<div>' +
+            '<div class="subject-card__name">' + escapeHtml(subj.name) + '</div>' +
+            '<div class="subject-card__count">' + countLabel + '</div>' +
+          '</div>' +
+        '</div>' +
+        lastLabel +
+      '</button>';
+  }
+
+  html += '</div>';
+  view.innerHTML = html;
+}
+
+/* Экран 3: Лента конспектов */
+function renderPosts() {
+  if (state.classId && state.subject) {
+    markSubjectSeen(state.classId, state.subject);
+  }
+
+  var subj = null;
+  for (var i = 0; i < SUBJECTS.length; i++) {
+    if (SUBJECTS[i].id === state.subject) { subj = SUBJECTS[i]; break; }
+  }
+  if (!subj) { goHome(); return; }
+
+  // Все посты по этому предмету в этом классе
+  var all = [];
+  for (var j = 0; j < state.posts.length; j++) {
+    var p = state.posts[j];
+    if (p.classId === state.classId && p.subject === state.subject) all.push(p);
+  }
+
+  // Фильтр по дате (если выбрана)
+  var shown = all;
+  if (state.filterDate) {
+    shown = [];
+    for (var k = 0; k < all.length; k++) {
+      if (dateKey(all[k].createdAt) === state.filterDate) shown.push(all[k]);
+    }
+  }
+
+  // Сортировка по дате — новые сверху
+  shown = shown.slice().sort(function (a, b) { return b.createdAt - a.createdAt; });
+
+  var view = $('view');
+  if (!view) return;
+
+  view.innerHTML =
+    '<div class="posts-head">' +
+      '<h1 class="title" style="margin:0">' + subj.icon + ' ' + escapeHtml(subj.name) +
+        ' · ' + escapeHtml(state.classId) + '</h1>' +
+      '<button class="btn btn--primary" id="btn-add-post" type="button">+ Добавить конспект</button>' +
+    '</div>' +
+    '<div class="posts-layout ' + (all.length ? '' : 'posts-layout--no-calendar') + '">' +
+      (all.length ? renderCalendar(all) : '<div></div>') +
+      '<div>' +
+        '<div id="upload-box"></div>' +
+        '<div class="posts" id="posts-list">' + renderPostsList(shown) + '</div>' +
+      '</div>' +
+    '</div>';
+
+  var addBtn = $('btn-add-post');
+  if (addBtn) addBtn.addEventListener('click', toggleUploadForm);
+
+  bindCalendarEvents();
+}
+
+/* Календарь */
+function renderCalendar(allPosts) {
+  ensureCalendar();
+  var year = state.calendar.year;
+  var month = state.calendar.month;
+
+  // Считаем, сколько постов в каждом дне
+  var counts = {};
+  for (var i = 0; i < allPosts.length; i++) {
+    var k = dateKey(allPosts[i].createdAt);
+    counts[k] = (counts[k] || 0) + 1;
+  }
+
+  var firstWeekday = (new Date(year, month, 1).getDay() + 6) % 7;
+  var daysInMonth = new Date(year, month + 1, 0).getDate();
+  var todayKey = dateKey(Date.now());
+
+  var cells = '';
+  for (var e = 0; e < firstWeekday; e++) {
+    cells += '<div class="calendar__cell calendar__cell--empty"></div>';
+  }
+  for (var d = 1; d <= daysInMonth; d++) {
+    var key = year + '-' + String(month + 1).padStart(2, '0') + '-' + String(d).padStart(2, '0');
+    var cls = 'calendar__cell';
+    if (key === todayKey) cls += ' calendar__cell--today';
+    if (counts[key]) cls += ' calendar__cell--has-posts';
+    if (state.filterDate === key) cls += ' calendar__cell--selected';
+
+    cells += '<div class="' + cls + '" data-date="' + key + '">' +
+             d + (counts[key] ? '<span class="calendar__dot"></span>' : '') +
+             '</div>';
+  }
+
+  var filterBar = state.filterDate
+    ? '<div class="calendar__filter-bar">' +
+        '<span>📅 ' + formatFilterDate(state.filterDate) + '</span>' +
+        '<button class="calendar__clear" data-calendar-clear type="button">Сбросить</button>' +
+      '</div>'
+    : '';
+
+  return '<div class="calendar">' +
+    '<div class="calendar__head">' +
+      '<button class="calendar__nav" data-calendar-nav="-1" type="button">‹</button>' +
+      '<div class="calendar__title">' + MONTHS[month] + ' ' + year + '</div>' +
+      '<button class="calendar__nav" data-calendar-nav="1" type="button">›</button>' +
+    '</div>' +
+    '<div class="calendar__weekdays">' +
+      '<div class="calendar__wd">Пн</div><div class="calendar__wd">Вт</div>' +
+      '<div class="calendar__wd">Ср</div><div class="calendar__wd">Чт</div>' +
+      '<div class="calendar__wd">Пт</div><div class="calendar__wd">Сб</div>' +
+      '<div class="calendar__wd">Вс</div>' +
+    '</div>' +
+    '<div class="calendar__grid">' + cells + '</div>' +
+    filterBar +
+  '</div>';
+}
+
+// Навешиваем обработчики на календарь
+function bindCalendarEvents() {
+  var i;
+
+  // Стрелки влево/вправо
+  var navs = document.querySelectorAll('[data-calendar-nav]');
+  for (i = 0; i < navs.length; i++) {
+    (function (btn) {
+      btn.addEventListener('click', function () {
+        var dir = parseInt(btn.getAttribute('data-calendar-nav'), 10);
+        var year = state.calendar.year;
+        var month = state.calendar.month + dir;
+        if (month < 0) { month = 11; year--; }
+        if (month > 11) { month = 0; year++; }
+        state.calendar = { year: year, month: month };
+        renderPosts();
+      });
+    })(navs[i]);
+  }
+
+  // Клик по дате
+  var cells = document.querySelectorAll('[data-date]');
+  for (i = 0; i < cells.length; i++) {
+    (function (cell) {
+      cell.addEventListener('click', function () {
+        var d = cell.getAttribute('data-date');
+        state.filterDate = (state.filterDate === d) ? null : d;
+        renderPosts();
+      });
+    })(cells[i]);
+  }
+
+  // Кнопки «Сбросить фильтр»
+  var clears = document.querySelectorAll('[data-calendar-clear]');
+  for (i = 0; i < clears.length; i++) {
+    (function (btn) {
+      btn.addEventListener('click', function (e) {
+        e.stopPropagation();
+        state.filterDate = null;
+        renderPosts();
+      });
+    })(clears[i]);
+  }
+}
+
+/* Список карточек конспектов */
+function renderPostsList(posts) {
+  if (!posts.length) {
+    if (state.filterDate) {
+      return '<div class="empty"><div class="empty__icon">📅</div>' +
+        '<div>За ' + formatFilterDate(state.filterDate) + ' конспектов нет.</div>' +
+        '<button class="btn btn--ghost" style="margin-top:12px" data-calendar-clear type="button">Показать все</button></div>';
+    }
+    return '<div class="empty"><div class="empty__icon">🍂</div>' +
+      '<div>Здесь пока пусто.<br>Загрузите первый конспект!</div></div>';
+  }
+
+  var showBadges = state.settings.badges;
+  var html = '';
+
+  for (var i = 0; i < posts.length; i++) {
+    var p = posts[i];
+    var own = p.author === state.user;
+    var comments = p.comments || [];
+    var edited = p.updatedAt && p.updatedAt > p.createdAt + 1000;
+    var future = isFuture(p.createdAt);
+    var key = p.classId + ':' + p.subject;
+    var seenAt = state.seen.subjects[key] || 0;
+    var isNew = showBadges && !own && p.createdAt > seenAt;
+
+    html +=
+      '<article class="post' + (isNew ? ' post--new' : '') + '" data-id="' + p.id + '">' +
+        (future ? '<span class="post__badge">⏳ запланирован</span>' : '') +
+        (isNew ? '<span class="post__badge--new">NEW</span>' : '') +
+        '<img class="post__image" src="' + p.image + '" alt="' + escapeHtml(p.title) + '" loading="lazy" data-zoom>' +
+        '<div class="post__body">' +
+          '<div class="post__title" data-open-post="' + p.id + '">' + escapeHtml(p.title) + '</div>' +
+          (p.desc ? '<div class="post__desc">' + escapeHtml(p.desc) + '</div>' : '') +
+          '<div class="post__footer">' +
+            '<div class="post__author">' +
+              '<div class="avatar">' + escapeHtml(initials(p.author)) + '</div>' +
+              '<span title="' + escapeHtml(p.author) + '">' + escapeHtml(p.author) + '</span>' +
+            '</div>' +
+            '<div class="post__actions">' +
+              '<button class="icon-action icon-action--comment" data-open-post="' + p.id + '" type="button" title="Комментарии">' +
+                '💬 ' + (comments.length || '') +
+              '</button>' +
+              (own ? '<button class="icon-action" data-edit-post="' + p.id + '" type="button" title="Редактировать">✏️</button>' : '') +
+              (own ? '<button class="icon-action" data-del-post="' + p.id + '" type="button" title="Удалить">🗑</button>' : '') +
+            '</div>' +
+          '</div>' +
+          '<div class="post__date">' +
+            '<span class="date">' + formatDate(p.createdAt) + ' · ' + formatTime(p.createdAt) + '</span>' +
+            '<span class="time">' + timeAgo(p.createdAt) +
+              (edited ? ' <span class="post__edited">· изменён</span>' : '') + '</span>' +
+          '</div>' +
+        '</div>' +
+      '</article>';
+  }
+  return html;
+}
+
+/* ------------------------------------------------------------
+   10. ФОРМА ЗАГРУЗКИ КОНСПЕКТА
+   ------------------------------------------------------------ */
+
+// Быстрые кнопки выбора даты
+function quickDatesHtml(prefix) {
+  return '<div class="quick-dates">' +
+    '<button type="button" data-quick="' + prefix + ':today">Сегодня</button>' +
+    '<button type="button" data-quick="' + prefix + ':yesterday">Вчера</button>' +
+    '<button type="button" data-quick="' + prefix + ':tomorrow">Завтра</button>' +
+    '<button type="button" data-quick="' + prefix + ':plus7">Через неделю</button>' +
+  '</div>';
+}
+
+// Применить быструю дату
+function applyQuickDate(prefix, kind) {
+  var now = new Date();
+  var d = new Date(now);
+  if (kind === 'yesterday') d.setDate(d.getDate() - 1);
+  else if (kind === 'tomorrow') d.setDate(d.getDate() + 1);
+  else if (kind === 'plus7') d.setDate(d.getDate() + 7);
+
+  var dateEl = $(prefix + '-date') || $(prefix + 'Date');
+  var timeEl = $(prefix + '-time') || $(prefix + 'Time');
+
+  // Пробуем разные варианты ID
+  if (!dateEl) dateEl = document.getElementById(prefix === 'post' ? 'post-date' : 'edit-date');
+  if (!timeEl) timeEl = document.getElementById(prefix === 'post' ? 'post-time' : 'edit-time');
+
+  if (dateEl) dateEl.value = inputDateValue(d.getTime());
+  if (timeEl) timeEl.value = (kind === 'today') ? inputTimeValue(Date.now()) : '12:00';
+}
+
+// Показать/скрыть форму
+function toggleUploadForm() {
+  var box = $('upload-box');
+  if (!box) return;
+  if (box.innerHTML) { box.innerHTML = ''; return; }
+
+  box.innerHTML =
+    '<div class="upload-form">' +
+      '<div class="field">' +
+        '<label>Фото конспекта</label>' +
+        '<label class="file-label" id="file-label" for="file-input">📸 <span id="file-label-text">Нажмите, чтобы выбрать фото</span></label>' +
+        '<input type="file" id="file-input" accept="image/*" hidden>' +
+        '<img id="preview-image" class="preview-img" style="display:none" alt="">' +
+      '</div>' +
+      '<div class="field">' +
+        '<label>Название</label>' +
+        '<input type="text" id="post-title" maxlength="80" placeholder="Например: Параграф 12">' +
+      '</div>' +
+      '<div class="field">' +
+        '<label>Описание (необязательно)</label>' +
+        '<textarea id="post-desc" rows="2" maxlength="250" placeholder="Коротко о чём конспект"></textarea>' +
+      '</div>' +
+      '<div class="field-row">' +
+        '<div class="field" style="margin-bottom:0">' +
+          '<label>Дата публикации</label>' +
+          '<input type="date" id="post-date" value="' + inputDateValue(Date.now()) + '">' +
+        '</div>' +
+        '<div class="field" style="margin-bottom:0">' +
+          '<label>Время</label>' +
+          '<input type="time" id="post-time" value="' + inputTimeValue(Date.now()) + '">' +
+        '</div>' +
+      '</div>' +
+      quickDatesHtml('post') +
+      '<div class="hint">Можно поставить прошедшую или будущую дату.</div>' +
+      '<div class="form-actions">' +
+        '<button class="btn btn--ghost" id="btn-cancel-upload" type="button">Отмена</button>' +
+        '<button class="btn btn--primary" id="btn-submit-upload" type="button">Опубликовать</button>' +
+      '</div>' +
+    '</div>';
+
+  var fileInput = $('file-input');
+  var fileLabel = $('file-label');
+  var fileLabelText = $('file-label-text');
+  var previewImage = $('preview-image');
+  var imageData = null;
+
+  fileInput.addEventListener('change', function (e) {
+    var file = e.target.files && e.target.files[0];
+    if (!file) return;
+
+    if (file.type && file.type.indexOf('image/') !== 0) {
+      toast('Выберите файл-изображение');
+      return;
+    }
+    if (file.size > 15 * 1024 * 1024) {
+      toast('Файл больше 15 МБ');
+      return;
+    }
+
+    fileLabelText.textContent = file.name || 'Файл выбран';
+    fileLabel.classList.add('file-label--has-file');
+
+    var reader = new FileReader();
+    reader.onload = function (ev) {
+      compressImage(ev.target.result, 1280, 0.8, function (dataUrl) {
+        imageData = dataUrl;
+        previewImage.src = dataUrl;
+        previewImage.style.display = 'block';
+      });
+    };
+    reader.readAsDataURL(file);
+  });
+
+  $('btn-cancel-upload').addEventListener('click', function () {
+    box.innerHTML = '';
+  });
+
+  $('btn-submit-upload').addEventListener('click', function () {
+    if (!state.user) { openAuth('login'); return; }
+    if (!imageData) { toast('Добавьте фото'); return; }
+
+    var dateStr = $('post-date').value;
+    var timeStr = $('post-time').value || inputTimeValue(Date.now());
+    var createdAt = combineDateTime(dateStr, timeStr);
+    if (!createdAt) { toast('Укажите дату публикации'); return; }
+
+    var post = {
+      id: uid(),
+      classId: state.classId,
+      subject: state.subject,
+      author: state.user,
+      title: ($('post-title').value || '').trim() || 'Без названия',
+      desc: ($('post-desc').value || '').trim(),
+      image: imageData,
+      comments: [],
+      createdAt: createdAt,
+      updatedAt: Date.now()
+    };
+
+    state.posts.push(post);
+    if (!savePosts()) {
+      state.posts.pop();
+      toast('Хранилище переполнено. Удалите старые конспекты.');
+      return;
+    }
+
+    // Перелистываем календарь на месяц опубликованного конспекта
+    state.filterDate = null;
+    var d = new Date(createdAt);
+    state.calendar = { year: d.getFullYear(), month: d.getMonth() };
+
+    toast(isFuture(createdAt) ? 'Конспект запланирован ⏳' : 'Конспект опубликован 🍁');
+    renderPosts();
+  });
+}
+
+/* ------------------------------------------------------------
+   11. РЕДАКТИРОВАНИЕ КОНСПЕКТА
+   ------------------------------------------------------------ */
+function openEdit(id) {
+  var post = findPost(id);
+  if (!post || post.author !== state.user) return;
+
+  state.editingId = id;
+
+  $('edit-title').value = post.title;
+  $('edit-desc').value = post.desc || '';
+  $('edit-date').value = inputDateValue(post.createdAt);
+  $('edit-time').value = inputTimeValue(post.createdAt);
+  $('edit-preview').src = post.image;
+  $('edit-preview').style.display = 'block';
+  $('edit-file-text').textContent = 'Оставить текущее';
+  $('edit-file-label').classList.remove('file-label--has-file');
+  $('edit-file-input').value = '';
+
+  $('edit-file-input').onchange = function (e) {
+    var file = e.target.files && e.target.files[0];
+    if (!file) return;
+    if (file.type && file.type.indexOf('image/') !== 0) {
+      toast('Выберите файл-изображение'); return;
+    }
+    if (file.size > 15 * 1024 * 1024) {
+      toast('Файл больше 15 МБ'); return;
+    }
+    $('edit-file-text').textContent = file.name || 'Новое фото';
+    $('edit-file-label').classList.add('file-label--has-file');
+
+    var reader = new FileReader();
+    reader.onload = function (ev) {
+      compressImage(ev.target.result, 1280, 0.8, function (dataUrl) {
+        $('edit-preview').src = dataUrl;
+      });
+    };
+    reader.readAsDataURL(file);
+  };
+
+  $('overlay-edit').classList.add('overlay--open');
+}
+
+function saveEdit() {
+  var post = findPost(state.editingId);
+  if (!post) return;
+
+  var dateStr = $('edit-date').value;
+  var timeStr = $('edit-time').value || '12:00';
+  var newTs = combineDateTime(dateStr, timeStr);
+  if (!newTs) { toast('Укажите дату'); return; }
+
+  post.title = ($('edit-title').value || '').trim() || 'Без названия';
+  post.desc = ($('edit-desc').value || '').trim();
+  post.createdAt = newTs;
+
+  var imgSrc = $('edit-preview').src;
+  if (imgSrc && imgSrc !== post.image) post.image = imgSrc;
+
+  post.updatedAt = Date.now();
+
+  savePosts();
+  $('overlay-edit').classList.remove('overlay--open');
+  state.editingId = null;
+
+  // Календарь на месяц новой даты
+  var d = new Date(newTs);
+  state.calendar = { year: d.getFullYear(), month: d.getMonth() };
+  state.filterDate = null;
+
+  renderPosts();
+  toast('Изменения сохранены');
+}
+
+/* ------------------------------------------------------------
+   12. ПРОСМОТР КОНСПЕКТА + КОММЕНТАРИИ
+   ------------------------------------------------------------ */
+function openDetail(id) {
+  var post = findPost(id);
+  if (!post) return;
+  state.detailId = id;
+  renderDetail();
+  $('overlay-detail').classList.add('overlay--open');
+}
+
+function renderDetail() {
+  var post = findPost(state.detailId);
+  if (!post) { $('overlay-detail').classList.remove('overlay--open'); return; }
+
+  var comments = post.comments || [];
+  var edited = post.updatedAt && post.updatedAt > post.createdAt + 1000;
+  var future = isFuture(post.createdAt);
+
+  var commentsHtml = '';
+  if (comments.length) {
+    for (var i = 0; i < comments.length; i++) {
+      var c = comments[i];
+      commentsHtml +=
+        '<div class="comment">' +
+          '<div class="avatar">' + escapeHtml(initials(c.author)) + '</div>' +
+          '<div class="comment__body">' +
+            '<div class="comment__head">' +
+              '<span class="comment__author">' + escapeHtml(c.author) + '</span>' +
+              '<span class="comment__time">' + formatDateTime(c.createdAt) + '</span>' +
+              (c.author === state.user
+                ? '<button class="comment__del" data-del-comment="' + c.id + '" type="button">🗑</button>'
+                : '') +
+            '</div>' +
+            '<div class="comment__text">' + escapeHtml(c.text) + '</div>' +
+          '</div>' +
+        '</div>';
+    }
+  } else {
+    commentsHtml = '<div class="comments-empty">Комментариев пока нет. Будьте первым!</div>';
+  }
+
+  $('detail-content').innerHTML =
+    (future ? '<div class="post__badge" style="position:static;display:inline-block;margin-bottom:10px">⏳ запланирован</div>' : '') +
+    '<img class="detail-image" src="' + post.image + '" alt="' + escapeHtml(post.title) + '" data-zoom>' +
+    '<h2 class="detail-title">' + escapeHtml(post.title) + '</h2>' +
+    (post.desc ? '<div class="detail-desc">' + escapeHtml(post.desc) + '</div>' : '') +
+    '<div class="detail-meta">' +
+      '<div class="avatar" style="width:22px;height:22px;font-size:11px">' + escapeHtml(initials(post.author)) + '</div>' +
+      '<span style="color:var(--text);font-weight:600">' + escapeHtml(post.author) + '</span>' +
+      '<span>·</span>' +
+      '<span>' + formatDateTime(post.createdAt) + '</span>' +
+      (edited ? '<span class="post__edited">· изменён</span>' : '') +
+    '</div>' +
+    '<div class="comments-title">Комментарии (' + comments.length + ')</div>' +
+    '<div class="comments-list">' + commentsHtml + '</div>' +
+    '<div class="comment-form">' +
+      '<input type="text" id="comment-input" maxlength="300" placeholder="Написать комментарий..." autocomplete="off">' +
+      '<button class="btn btn--primary" id="btn-send-comment" type="button">Отправить</button>' +
+    '</div>';
+
+  $('btn-send-comment').addEventListener('click', sendComment);
+  $('comment-input').addEventListener('keydown', function (e) {
+    if (e.key === 'Enter') sendComment();
+  });
+}
+
+function sendComment() {
+  if (!state.user) { openAuth('login'); return; }
+  var input = $('comment-input');
+  if (!input) return;
+  var text = input.value.trim();
+  if (!text) return;
+
+  var post = findPost(state.detailId);
+  if (!post) return;
+
+  if (!post.comments) post.comments = [];
+  post.comments.push({
+    id: uid(),
+    author: state.user,
+    text: text,
+    createdAt: Date.now()
+  });
+
+  savePosts();
+  renderDetail();
+  renderPosts();
+  setTimeout(function () {
+    var inp = $('comment-input');
+    if (inp) inp.focus();
+  }, 40);
+}
+
+/* ------------------------------------------------------------
+   13. ЧАТ ПАРАЛЛЕЛИ
+   ------------------------------------------------------------ */
+function renderChat() {
+  var grade = state.chatGrade;
+  markChatSeen(grade);
+
+  var messages = state.chats[grade] || [];
+  var listHtml = '';
+
+  if (messages.length) {
+    for (var i = 0; i < messages.length; i++) {
+      var m = messages[i];
+      var own = m.author === state.user;
+      listHtml +=
+        '<div class="chat-msg' + (own ? ' chat-msg--own' : '') + '">' +
+          '<div class="avatar">' + escapeHtml(initials(m.author)) + '</div>' +
+          '<div class="chat-msg__body">' +
+            '<div class="chat-msg__head">' +
+              '<span class="chat-msg__author">' + escapeHtml(m.author) + '</span>' +
+              '<span class="chat-msg__time">' + formatDateTime(m.createdAt) + '</span>' +
+              (own ? '<button class="chat-msg__del" data-del-chat="' + m.id + '" type="button">🗑</button>' : '') +
+            '</div>' +
+            '<div class="chat-msg__text">' + escapeHtml(m.text) + '</div>' +
+          '</div>' +
+        '</div>';
+    }
+  } else {
+    listHtml = '<div class="chat-empty">💬 Пока сообщений нет.<br>Начните общение первым!</div>';
+  }
+
+  $('view').innerHTML =
+    '<div class="chat-view">' +
+      '<h1 class="title" style="margin:0">💬 Чат ' + escapeHtml(grade) + '-х классов</h1>' +
+      '<div class="chat-messages" id="chat-messages">' + listHtml + '</div>' +
+      '<div class="chat-input-row">' +
+        '<input type="text" id="chat-input" maxlength="500" placeholder="Написать сообщение..." autocomplete="off">' +
+        '<button class="btn btn--primary" id="btn-send-chat" type="button">Отправить</button>' +
+      '</div>' +
+    '</div>';
+
+  $('btn-send-chat').addEventListener('click', sendChatMessage);
+  $('chat-input').addEventListener('keydown', function (e) {
+    if (e.key === 'Enter') sendChatMessage();
+  });
+}
+
+function sendChatMessage() {
+  if (!state.user) { openAuth('login'); return; }
+  var input = $('chat-input');
+  if (!input) return;
+  var text = input.value.trim();
+  if (!text) return;
+
+  var grade = state.chatGrade;
+  if (!state.chats[grade]) state.chats[grade] = [];
+  state.chats[grade].push({
+    id: uid(),
+    author: state.user,
+    text: text,
+    createdAt: Date.now()
+  });
+
+  saveChats();
+  renderChat();
+  setTimeout(scrollChatToBottom, 20);
+}
+
+function scrollChatToBottom() {
+  var box = $('chat-messages');
+  if (box) box.scrollTop = box.scrollHeight;
+}
+
+/* ------------------------------------------------------------
+   14. НАСТРОЙКИ
+   ------------------------------------------------------------ */
+function openSettings() {
+  $('set-chat').checked = !!state.settings.chat;
+  $('set-posts').checked = !!state.settings.posts;
+  $('set-sound').checked = !!state.settings.sound;
+  $('set-badges').checked = !!state.settings.badges;
+
+  // Чипы параллелей
+  var chips = '';
+  for (var i = 0; i < GRADES.length; i++) {
+    var g = GRADES[i];
+    var on = state.settings.chatGrades[g] !== false;
+    chips += '<button class="grade-chip ' + (on ? 'grade-chip--on' : 'grade-chip--off') +
+             '" data-grade-chip="' + g + '" type="button">' + g + '</button>';
+  }
+  $('set-chat-grades').innerHTML = chips;
+
+  $('set-chat-grades-wrap').style.display = state.settings.chat ? 'block' : 'none';
+  updateBrowserPushStatus();
+  $('overlay-settings').classList.add('overlay--open');
+}
+
+function updateBrowserPushStatus() {
+  var statusEl = $('browser-push-status');
+  var btn = $('btn-browser-push');
+  if (!statusEl || !btn) return;
+
+  if (!('Notification' in window)) {
+    statusEl.textContent = 'Браузер не поддерживает уведомления';
+    btn.disabled = true;
+    btn.textContent = 'Недоступно';
+    return;
+  }
+
+  var perm = Notification.permission;
+  if (perm === 'granted') {
+    statusEl.textContent = 'Разрешение выдано ✓';
+    btn.textContent = 'Разрешение активно';
+    btn.disabled = true;
+  } else if (perm === 'denied') {
+    statusEl.textContent = 'Разрешение отклонено — проверьте настройки';
+    btn.textContent = 'Заблокировано';
+    btn.disabled = true;
+  } else {
+    statusEl.textContent = 'Разрешить системные уведомления';
+    btn.textContent = 'Запросить разрешение';
+    btn.disabled = false;
+  }
+}
+
+/* ------------------------------------------------------------
+   15. ПРИВЯЗКА ОБРАБОТЧИКОВ
+   ------------------------------------------------------------ */
+function bindAllHandlers() {
+  // Вкладки Вход/Регистрация
+  $('tab-login').addEventListener('click', function () {
+    state.authMode = 'login';
+    $('tab-login').classList.add('auth-tab--active');
+    $('tab-register').classList.remove('auth-tab--active');
+    $('auth-title').textContent = 'Вход в аккаунт';
+    $('auth-submit').textContent = 'Войти';
+    hideAuthError();
+  });
+
+  $('tab-register').addEventListener('click', function () {
+    state.authMode = 'register';
+    $('tab-register').classList.add('auth-tab--active');
+    $('tab-login').classList.remove('auth-tab--active');
+    $('auth-title').textContent = 'Регистрация';
+    $('auth-submit').textContent = 'Создать аккаунт';
+    hideAuthError();
+  });
+
+  // Отправка формы входа/регистрации
+  $('auth-submit').addEventListener('click', submitAuth);
+  $('auth-password').addEventListener('keydown', function (e) {
+    if (e.key === 'Enter') submitAuth();
+  });
+  $('auth-name').addEventListener('keydown', function (e) {
+    if (e.key === 'Enter') $('auth-password').focus();
+  });
+
+  // Меню пользователя
+  $('btn-user-menu').addEventListener('click', function (e) {
+    e.stopPropagation();
+    if (!state.user) { openAuth('login'); return; }
+    $('user-menu').classList.toggle('user-menu--open');
+  });
+
+  // Выход
+  $('btn-logout').addEventListener('click', function () {
+    state.user = '';
+    storageRemove(KEY_SESSION);
+    updateUserChip();
+    $('user-menu').classList.remove('user-menu--open');
+    goHome();
+    toast('Вы вышли из аккаунта');
+    openAuth('login');
+  });
+
+  // Уведомления
+  $('btn-notifications').addEventListener('click', function () {
+    renderNotificationsCenter();
+    $('overlay-notifications').classList.add('overlay--open');
+  });
+
+  // Настройки
+  $('btn-settings').addEventListener('click', openSettings);
+
+  // Переключатели настроек
+  $('set-chat').addEventListener('change', function (e) {
+    state.settings.chat = e.target.checked;
+    saveSettings();
+    $('set-chat-grades-wrap').style.display = e.target.checked ? 'block' : 'none';
+    render();
+  });
+
+  $('set-posts').addEventListener('change', function (e) {
+    state.settings.posts = e.target.checked;
+    saveSettings();
+    render();
+  });
+
+  $('set-sound').addEventListener('change', function (e) {
+    state.settings.sound = e.target.checked;
+    saveSettings();
+    if (e.target.checked) beep();
+  });
+
+  $('set-badges').addEventListener('change', function (e) {
+    state.settings.badges = e.target.checked;
+    saveSettings();
+    render();
+  });
+
+  // Разрешение на системные уведомления
+  $('btn-browser-push').addEventListener('click', function () {
+    if (!('Notification' in window)) return;
+    try {
+      var result = Notification.requestPermission();
+      if (result && result.then) {
+        result.then(function (perm) {
+          updateBrowserPushStatus();
+          if (perm === 'granted') toast('Разрешение получено ✓');
+        });
+      } else {
+        Notification.requestPermission(function (perm) {
+          updateBrowserPushStatus();
+          if (perm === 'granted') toast('Разрешение получено ✓');
+        });
+      }
+    } catch (e) {}
+  });
+
+  // Отметить всё прочитанным
+  $('btn-mark-all-read').addEventListener('click', function () {
+    markAllSeen();
+    render();
+    renderNotificationsCenter();
+    toast('Все отмечены как прочитанные ✓');
+  });
+
+  // Редактирование: отмена и сохранение
+  $('edit-cancel').addEventListener('click', function () {
+    $('overlay-edit').classList.remove('overlay--open');
+    state.editingId = null;
+  });
+  $('edit-save').addEventListener('click', saveEdit);
+
+  // Закрытие модалок по клику на фон
+  var overlays = ['overlay-image', 'overlay-detail', 'overlay-edit'];
+  for (var i = 0; i < overlays.length; i++) {
+    (function (id) {
+      var ov = $(id);
+      if (!ov) return;
+      ov.addEventListener('click', function (e) {
+        if (e.target === ov) {
+          ov.classList.remove('overlay--open');
+          if (id === 'overlay-edit') state.editingId = null;
+        }
+      });
+    })(overlays[i]);
+  }
+
+  // Escape закрывает все модалки
+  document.addEventListener('keydown', function (e) {
+    if (e.key === 'Escape' || e.keyCode === 27) {
+      var ids = ['overlay-image', 'overlay-detail', 'overlay-edit',
+                 'overlay-notifications', 'overlay-settings'];
+      for (var k = 0; k < ids.length; k++) {
+        var ov = $(ids[k]);
+        if (ov) ov.classList.remove('overlay--open');
+      }
+      var menu = $('user-menu');
+      if (menu) menu.classList.remove('user-menu--open');
+    }
+  });
+}
+
+/* ------------------------------------------------------------
+   16. ДЕЛЕГИРОВАНИЕ КЛИКОВ
+   Все клики по динамически созданным элементам обрабатываются здесь
+   ------------------------------------------------------------ */
+document.addEventListener('click', function (e) {
+  var target = e.target;
+
+  // Хелпер для closest (старые браузеры)
+  function closest(selector) {
+    if (target.closest) return target.closest(selector);
+    var node = target;
+    while (node && node !== document) {
+      if (node.matches && node.matches(selector)) return node;
+      node = node.parentNode;
+    }
+    return null;
+  }
+
+  // Зум фото
+  var zoom = closest('[data-zoom]');
+  if (zoom) {
+    $('zoom-image').src = zoom.src;
+    $('overlay-image').classList.add('overlay--open');
+    return;
+  }
+
+  // Открыть конспект (просмотр + комментарии)
+  var openPost = closest('[data-open-post]');
+  if (openPost) {
+    openDetail(openPost.getAttribute('data-open-post'));
+    return;
+  }
+
+  // Редактировать конспект
+  var editPost = closest('[data-edit-post]');
+  if (editPost) {
+    openEdit(editPost.getAttribute('data-edit-post'));
+    return;
+  }
+
+  // Удалить конспект
+  var delPost = closest('[data-del-post]');
+  if (delPost) {
+    if (!window.confirm('Удалить этот конспект вместе с комментариями?')) return;
+    var postId = delPost.getAttribute('data-del-post');
+    var newPosts = [];
+    for (var i = 0; i < state.posts.length; i++) {
+      if (state.posts[i].id !== postId) newPosts.push(state.posts[i]);
+    }
+    state.posts = newPosts;
+    savePosts();
+    renderPosts();
+    toast('Конспект удалён');
+    return;
+  }
+
+  // Удалить комментарий
+  var delComment = closest('[data-del-comment]');
+  if (delComment) {
+    var post = findPost(state.detailId);
+    if (!post) return;
+    var commentId = delComment.getAttribute('data-del-comment');
+    var newComments = [];
+    var oldComments = post.comments || [];
+    for (var j = 0; j < oldComments.length; j++) {
+      if (oldComments[j].id !== commentId) newComments.push(oldComments[j]);
+    }
+    post.comments = newComments;
+    savePosts();
+    renderDetail();
+    renderPosts();
+    return;
+  }
+
+  // Удалить сообщение чата
+  var delChat = closest('[data-del-chat]');
+  if (delChat) {
+    var grade = state.chatGrade;
+    var msgs = state.chats[grade] || [];
+    var msgId = delChat.getAttribute('data-del-chat');
+    var newMsgs = [];
+    for (var m = 0; m < msgs.length; m++) {
+      if (msgs[m].id !== msgId) newMsgs.push(msgs[m]);
+    }
+    state.chats[grade] = newMsgs;
+    saveChats();
+    renderChat();
+    setTimeout(scrollChatToBottom, 20);
+    return;
+  }
+
+  // Открыть чат параллели
+  var chatBtn = closest('[data-chat-grade]');
+  if (chatBtn) {
+    goChat(chatBtn.getAttribute('data-chat-grade'));
+    return;
+  }
+
+  // Открыть класс
+  var classBtn = closest('[data-class]');
+  if (classBtn) {
+    goClass(classBtn.getAttribute('data-class'));
+    return;
+  }
+
+  // Открыть предмет
+  var subjectBtn = closest('[data-subject]');
+  if (subjectBtn) {
+    goSubject(subjectBtn.getAttribute('data-subject'));
+    return;
+  }
+
+  // Клик по уведомлению — чат
+  var notifChat = closest('[data-notif-chat]');
+  if (notifChat) {
+    $('overlay-notifications').classList.remove('overlay--open');
+    goChat(notifChat.getAttribute('data-notif-chat'));
+    return;
+  }
+
+  // Клик по уведомлению — конспект
+  var notifPost = closest('[data-notif-post]');
+  if (notifPost) {
+    var parts = notifPost.getAttribute('data-notif-post').split('|');
+    $('overlay-notifications').classList.remove('overlay--open');
+    goClass(parts[0]);
+    setTimeout(function () { goSubject(parts[1]); }, 20);
+    return;
+  }
+
+  // Быстрые даты
+  var quickBtn = closest('[data-quick]');
+  if (quickBtn) {
+    var qp = quickBtn.getAttribute('data-quick').split(':');
+    applyQuickDate(qp[0], qp[1]);
+    return;
+  }
+
+  // Чип параллели в настройках
+  var gradeChip = closest('[data-grade-chip]');
+  if (gradeChip) {
+    var gnum = parseInt(gradeChip.getAttribute('data-grade-chip'), 10);
+    state.settings.chatGrades[gnum] = state.settings.chatGrades[gnum] === false ? true : false;
+    saveSettings();
+    gradeChip.classList.toggle('grade-chip--on', state.settings.chatGrades[gnum] !== false);
+    gradeChip.classList.toggle('grade-chip--off', state.settings.chatGrades[gnum] === false);
+    render();
+    return;
+  }
+
+  // Закрыть модалку по кнопке с data-close
+  var closeBtn = closest('[data-close]');
+  if (closeBtn) {
+    var ov = closeBtn.parentNode;
+    while (ov && ov !== document) {
+      if (ov.classList && ov.classList.contains('overlay')) {
+        ov.classList.remove('overlay--open');
+        break;
+      }
+      ov = ov.parentNode;
+    }
+    return;
+  }
+
+  // Клик вне меню пользователя — закрыть его
+  if (!closest('#user-menu') && !closest('#btn-user-menu')) {
+    var menu = $('user-menu');
+    if (menu) menu.classList.remove('user-menu--open');
+  }
+});
+
+/* ------------------------------------------------------------
+   17. УВЕДОМЛЕНИЯ МЕЖДУ ВКЛАДКАМИ
+   Срабатывает, когда в другой вкладке браузера что-то добавили
+   ------------------------------------------------------------ */
+window.addEventListener('storage', function (e) {
+  try {
+    // Новое сообщение в чате
+    if (e.key === KEY_CHATS && e.newValue) {
+      var newChats = JSON.parse(e.newValue);
+      for (var i = 0; i < GRADES.length; i++) {
+        var g = GRADES[i];
+        var oldMsgs = state.chats[g] || [];
+        var newMsgs = newChats[g] || [];
+
+        // Какие сообщения добавились
+        var oldIds = {};
+        for (var j = 0; j < oldMsgs.length; j++) oldIds[oldMsgs[j].id] = true;
+
+        for (var k = 0; k < newMsgs.length; k++) {
+          var msg = newMsgs[k];
+          if (oldIds[msg.id]) continue;
+          if (msg.author === state.user) continue;
+          if (!state.settings.chat) continue;
+          if (state.settings.chatGrades[g] === false) continue;
+          if (state.chatGrade === String(g)) continue;
+
+          (function (grade, message) {
+            showPush('chat', 'Чат ' + grade + '-х · ' + message.author, message.text, function () {
+              goChat(grade);
+            });
+            showBrowserNotification('Чат ' + grade + '-х · ' + message.author, message.text);
+          })(g, msg);
+          beep();
+        }
+      }
+      state.chats = newChats;
+      render();
+    }
+
+    // Новый конспект
+    if (e.key === KEY_POSTS && e.newValue) {
+      var newPosts = JSON.parse(e.newValue);
+      var oldPostIds = {};
+      for (var p1 = 0; p1 < state.posts.length; p1++) {
+        oldPostIds[state.posts[p1].id] = true;
+      }
+
+      for (var p2 = 0; p2 < newPosts.length; p2++) {
+        var post = newPosts[p2];
+        if (oldPostIds[post.id]) continue;
+        if (post.author === state.user) continue;
+        if (!state.settings.posts) continue;
+        if (state.classId === post.classId && state.subject === post.subject) continue;
+
+        (function (pp) {
+          var subjName = '';
+          for (var s = 0; s < SUBJECTS.length; s++) {
+            if (SUBJECTS[s].id === pp.subject) { subjName = SUBJECTS[s].name; break; }
+          }
+          var title = pp.classId + ' · ' + subjName + ' · ' + pp.author;
+          showPush('post', title, pp.title, function () {
+            goClass(pp.classId);
+            setTimeout(function () { goSubject(pp.subject); }, 20);
+          });
+          showBrowserNotification(title, pp.title);
+        })(post);
+        beep();
+      }
+      state.posts = newPosts;
+      render();
+    }
+  } catch (err) {}
+});
+
+/* ------------------------------------------------------------
+   18. СТАРТ
+   ------------------------------------------------------------ */
+function init() {
+  bindAllHandlers();
+  updateUserChip();
+  render();
+  if (!state.user) {
+    setTimeout(function () { openAuth('register'); }, 300);
+  }
+}
+
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', init);
+} else {
+  init();
+}
+
+})();
+</script>
+</body>
+</html>
